@@ -1,92 +1,30 @@
-version: 1.0.0
-authentication:
- debugMode: true
- hostName: mvsdb2a.bmc.com
- port: 32208
- user: AMIDB2A
- password: m6@gup9f
- symbolicPropertiesFilePath: symbol_DEJM_BUILD.properties
- debugModeAllSteps:
+###------------------------------------------------------------------------------------------------------------------------------------
+### Config_File_Transmission.yml
+###------------------------------------------------------------------------------------------------------------------------------------
+# Each line represents a property (key-value pair). 
+#   The property key (left side of colon) is a fixed keyword and should not be altered. 
+#   The property value (right side of colon) is for user input.    
+#   The alignment or spacing for the property key and value should not be changed. It may result in an unexpected error. The YAML file only works with proper alignment.
+#   For property values with multiple lines, specify the pipe | character after the property key.  On the following line, indent the lines with values.   
+###------------------------------------------------------------------------------------------------------------------------------------
 
-fileUpload:
-  - stepName: local_to_mainframe
-    runStepAlways    : false
-    debugMode        : true
-    sourceFolder     : .
-    sourceFileName   : DOSAMPLE.txt
-    destinationPds   : $[ddlpds]
-    destinationMember: GXS101
+version: 1.0.0               #Version of the configuration file. DO NOT alter the version value unless config file version is upgraded.
 
-  - stepName: local_to_mainframe
-    runStepAlways: false
-    debugMode: true
-    sourceFolder: .
-    sourceFileName: DOSAMPLE.txt
-    destinationPds: $[ddlpds]
-    destinationMember: GXS102
-    
-fileDownload:
-  - stepName: mainframe_to_local1
-    runStepAlways: true
-    debugMode: true
-    sourcePds: $[ddlpds]
-    sourceMember: DOSAMPLE
-    downloadFolder: .
-    downloadFileName: DOSAMPLE1
-
-outputTransmission:
-  - stepName: download
-    runStepAlways: false
-    debugMode: true
-    cdlSourcePds: MVSAMA.DEVOPS.CDL
-    worklistSourcePds: MVSAMA.DEVOPS.WORKLIST
-    execJclSourcePds: MVSAMA.DEVOPS.EXECJCL
-    impactReportSourcePds: MVSAMA.DEVOPS.IMPRPT
-    sourceMemberName: AA220422
-    downloadFolder: .
-    downloadFileName: output_report
-
-jclExecutionUsingFile:
-  - stepName: jclExecutionUsingFile1
-    runStepAlways: false
-    debugMode: true
-    jclFolder: .
-    jclFileName: SortJcl.txt
-    acceptableReturnCode: 0004
-    maxJobWaitTime: 2
-
-jclExecutionUsingPDSMember:
-  - stepName: jclExecutionUsingPdsMember1
-    runStepAlways: false
-    debugMode: true
-    jclPds: MVSAMA.JCL
-    jclMemberName: SORTJCL
-    acceptableReturnCode: 0004
-    maxJobWaitTime: 2
-
-jclExecutionUsingFreeForm:
-  - stepName: jclFreeForm1
-    runStepAlways: false
-    debugMode: true
-    freeFormJcl: |
-	      //MVSAMAST JOB (5213),'SORT   ',                            
-	      //         MSGCLASS=X,NOTIFY=&SYSUID,CLASS=A                
-	      //*                                                         
-	      //*     SORT 1ST 5 CHARS IN ASCENDING ORDER                 
-	      //*                                                         
-	      //STEP01   EXEC PGM=SORT                                    
-	      //SYSOUT   DD SYSOUT=*                                      
-	      //SORTIN   DD *                                             
-	       LINE5                                                       
-	       LINE2                                                       
-	       LINE1                                                       
-	       LINE4                                                       
-	       LINE3                                                       
-	      /*                                                          
-	      //SORTOUT  DD SYSOUT=*                                      
-	      //SYSIN    DD *                                             
-	        SORT FIELDS=(1,5,CH,A)                             
-	      /*                                                          
-	      //*
-    acceptableReturnCode: 0004
-    maxJobWaitTime: 2
+authentication:              #Step used in the pipeline for executing this configuration input. DO NOT alter the name.
+  debugMode: false           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+  hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
+  port: 32208                #Communication medium port used on mainframe TCP/IP network.
+  user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
+  password: USER_PASS_AUTH   #Mainframe TSO logon password. For security purposes, variable name should be used, like shown here: USER_PASS_AUTH which will be replaced by variable definition from pipeline.
+  symbolicPropertiesFilePath: AMI_DevOps.properties   #File path or file name (in case file is present in root directory) for the BMC AMI DevOps plug-in variable file. Default file name is AMI_DevOps.properties.
+  debugModeAllSteps: false   #Valid values are: true or false(default). If set to true, it will override the debugMode property to true in all config steps. 
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE  #Identifier keys used to trace the executed pipeline from the submitted JCL at the mainframe. Typically input as variable names and replaced by variable definition from pipeline. Do NOT alter unless directed by BMC Support.
+  
+fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
+  - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
+    sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
+    destinationPds: $[ddlpds]          #Partitioned data set (PDS) on the mainframe from which a member is received.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[ddlpds] which will be replaced by variable definition from AMI_DevOps.properties file.
+    destinationMember: JOB_ID          #Member on the mainframe that is received.  Member can be input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.
