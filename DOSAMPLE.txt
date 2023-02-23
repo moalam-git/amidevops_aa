@@ -1,0 +1,31 @@
+GRANT SYSADM TO DODECA
+;     
+                             
+CREATE DATABASE DODECA      
+   BUFFERPOOL BP8K0          
+   CCSID EBCDIC              
+;
+                    
+CREATE  TABLESPACE T06PBG  IN DODECA                                    
+             MAXPARTITIONS 20                                          
+             USING STOGROUP SYSDEFLT                                   
+             PRIQTY     72	                                             
+             SECQTY     72                                             
+             FREEPAGE 0 PCTFREE 0                                      
+             BUFFERPOOL BP8K0                                         
+             CLOSE      YES                                            
+             DSSIZE     1G 
+;                                           
+                                                                       
+CREATE TABLE DODECA.T_T06PBG                                            
+   (                                                                   
+   COL1_DEC  DECIMAL(15,5) NOT NULL WITH DEFAULT,                      
+   COL2_DEC  DECIMAL(11,4) NOT NULL,                                   
+   COL3_DEC  DECIMAL(10,3)  ,                                          
+   COL4_DEC  DECIMAL(5,2)  WITH DEFAULT,                               
+   COL5_DEC  DECIMAL(3,1)  NOT NULL WITH DEFAULT IMPLICITLY HIDDEN     
+   )  
+   IN DODECA.T06PBG                                                   
+;                                                                   
+                                                                       
+     

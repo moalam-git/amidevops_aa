@@ -1,0 +1,19 @@
+//MVSAMAST JOB (5213),'SORT   ',                            
+//         MSGCLASS=X,NOTIFY=&SYSUID,CLASS=A                
+//*                                                         
+//*     SORT 1ST 5 CHARS IN ASCENDING ORDER                 
+//*                                                         
+//STEP01   EXEC PGM=SORT                                    
+//SYSOUT   DD SYSOUT=*                                      
+//SORTIN   DD *                                             
+LINE5                                                       
+LINE2                                                       
+LINE1                                                       
+LINE4                                                       
+LINE3                                                       
+/*                                                          
+//SORTOUT  DD SYSOUT=*                                      
+//SYSIN    DD *                                             
+     SORT FIELDS=(1,5,CH,A)                             
+/*                                                          
+//                                                          

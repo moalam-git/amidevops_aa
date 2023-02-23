@@ -1,0 +1,92 @@
+version: 1.0.0
+authentication:
+ debugMode: true
+ hostName: mvsdb2a.bmc.com
+ port: 32208
+ user: AMIDB2A
+ password: m6@gup9f
+ symbolicPropertiesFilePath: symbol_DEJM_BUILD.properties
+ debugModeAllSteps:
+
+fileUpload:
+  - stepName: local_to_mainframe
+    runStepAlways    : false
+    debugMode        : true
+    sourceFolder     : .
+    sourceFileName   : DOSAMPLE.txt
+    destinationPds   : $[ddlpds]
+    destinationMember: GXS101
+
+  - stepName: local_to_mainframe
+    runStepAlways: false
+    debugMode: true
+    sourceFolder: .
+    sourceFileName: DOSAMPLE.txt
+    destinationPds: $[ddlpds]
+    destinationMember: GXS102
+    
+fileDownload:
+  - stepName: mainframe_to_local1
+    runStepAlways: true
+    debugMode: true
+    sourcePds: $[ddlpds]
+    sourceMember: DOSAMPLE
+    downloadFolder: .
+    downloadFileName: DOSAMPLE1
+
+outputTransmission:
+  - stepName: download
+    runStepAlways: false
+    debugMode: true
+    cdlSourcePds: MVSAMA.DEVOPS.CDL
+    worklistSourcePds: MVSAMA.DEVOPS.WORKLIST
+    execJclSourcePds: MVSAMA.DEVOPS.EXECJCL
+    impactReportSourcePds: MVSAMA.DEVOPS.IMPRPT
+    sourceMemberName: AA220422
+    downloadFolder: .
+    downloadFileName: output_report
+
+jclExecutionUsingFile:
+  - stepName: jclExecutionUsingFile1
+    runStepAlways: false
+    debugMode: true
+    jclFolder: .
+    jclFileName: SortJcl.txt
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
+
+jclExecutionUsingPDSMember:
+  - stepName: jclExecutionUsingPdsMember1
+    runStepAlways: false
+    debugMode: true
+    jclPds: MVSAMA.JCL
+    jclMemberName: SORTJCL
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
+
+jclExecutionUsingFreeForm:
+  - stepName: jclFreeForm1
+    runStepAlways: false
+    debugMode: true
+    freeFormJcl: |
+	      //MVSAMAST JOB (5213),'SORT   ',                            
+	      //         MSGCLASS=X,NOTIFY=&SYSUID,CLASS=A                
+	      //*                                                         
+	      //*     SORT 1ST 5 CHARS IN ASCENDING ORDER                 
+	      //*                                                         
+	      //STEP01   EXEC PGM=SORT                                    
+	      //SYSOUT   DD SYSOUT=*                                      
+	      //SORTIN   DD *                                             
+	       LINE5                                                       
+	       LINE2                                                       
+	       LINE1                                                       
+	       LINE4                                                       
+	       LINE3                                                       
+	      /*                                                          
+	      //SORTOUT  DD SYSOUT=*                                      
+	      //SYSIN    DD *                                             
+	        SORT FIELDS=(1,5,CH,A)                             
+	      /*                                                          
+	      //*
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
