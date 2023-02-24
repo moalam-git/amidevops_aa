@@ -21,6 +21,7 @@ jobs:
       image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0001.21
       # UID which can be used uid=1009(MVSYXJ)
       options: -u root
+#       options: -u 1008
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Check out repository
