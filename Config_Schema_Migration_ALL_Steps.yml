@@ -1,0 +1,965 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Config_Schema_Migration_ALL_Steps.yml (Do not modify the file. Use this as reference only)
+###------------------------------------------------------------------------------------------------------------------------------------
+# Each line represents a property (key-value pair). 
+#   The property key (left side of colon) is a fixed keyword and should not be altered. 
+#   The property value (right side of colon) is for user input.    
+#   The alignment or spacing for the property key and value should not be changed. It may result in an unexpected error. The YAML file only works with proper alignment.
+#   For property values with multiple lines, specify the pipe | character after the property key.  On the following line, indent the lines with values.   
+###------------------------------------------------------------------------------------------------------------------------------------
+
+version: 1.0.0               #Version of the configuration file. DO NOT alter the version value unless config file version is upgraded.
+
+authentication:              #Step used in the pipeline for executing this configuration input. DO NOT alter the name.
+  debugMode: false           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+  hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
+  port: 32208                #Communication medium port used on mainframe TCP/IP network.
+  user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
+  password: USER_PASS_AUTH   #Mainframe TSO logon password. For security purposes, variable name should be used, like shown here: USER_PASS_AUTH which will be replaced by variable definition from pipeline.
+  symbolicPropertiesFilePath: AMI_DevOps.properties   #File path or file name (in case file is present in root directory) for the BMC AMI DevOps plug-in variable file. Default file name is AMI_DevOps.properties.
+  debugModeAllSteps: false   #Valid values are: true or false(default). If set to true, it will override the debugMode property to true in all config steps. 
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE  #Identifier keys used to trace the executed pipeline from the submitted JCL at the mainframe. Typically input as variable names and replaced by variable definition from pipeline. Do NOT alter unless directed by BMC Support.
+  
+fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
+  - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
+    sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
+    destinationPds: $[ddlpds]          #Partitioned data set (PDS) on the mainframe from which a member is received.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[ddlpds] which will be replaced by variable definition from AMI_DevOps.properties file.
+    destinationMember: JOB_ID          #Member on the mainframe that is received.  Member can be input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.
+
+fileDownload:                          #Step represents File Transmission from mainframe (download). DO NOT alter the name.
+  - stepName: mainframe_to_local       #User defined step name used in the pipeline, for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step. 
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    sourcePds: SAMPLE.JCL              #Partitioned data set (PDS) on the mainframe where the member is transferred.  
+    sourceMember: MPBPB1               #Member on the mainframe that is transferred.
+    destinationFileName: sample.txt    #File in the agent workspace path that is received.
+
+localCatToDDL:                         #Step represents Schema Migration (Compare)-Local Cat to DDL with DDL file as scope. DO NOT alter the name.
+  - stepName: Local_Cat_to_DDL         #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    compare2DdlPds: $[ddlpds](JOB_ID)  #Partitioned data set (PDS) and DDL member that represents the objects that have the desired structure definitions, used to compare to the local catalog. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[ddlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=${compare2DdlPds}
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToWorklist:                    #Step represents Schema Migration (Compare)-Local Cat to Migrate Worklist with Worklist as scope. DO NOT alter the name.
+  - stepName: localCat_to_Worklist     #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    compare2WorklistPds: $[wlpds](JOB_ID)            #Partitioned data set (PDS) and Worklist member that represents the objects that have the desired structure definitions, used to compare to the local catalog. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=${compare2WorklistPds}
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToBaseline:                    #Step represents Schema Migration (Compare)-Local Cat to Baseline. DO NOT alter the name.
+  - stepName: localCat_to_Baseline     #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    compare2BaselineName: OWNER.BASELINE             #Baseline name (owner.name) that represents the objects that have the desired structure definitions, used to compare to the local catalog. Input as specific name or variable name.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToLocalCatObjectsAsScope:           #Step represents Schema Migration (Compare)-Local Cat to Local Cat with Objects as Scope. DO NOT alter the name.
+  - stepName: localCat_to_localCatObjScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    objectType: DB                     #Valid values are: SG, DB, TS, TB, IX, VW, SY, AL, SP. Type of objects that a comparison includes for both Compare 1 and Compare2 objects.
+    objectNamePart1ForCompare1: DB1    #Specifies Part 1 of the object name to be included in the scope for the Compare1 objects. Applies to STOGROUP name, Database name, and creator or schema for all other object types.
+    objectNamePart2ForCompare1:        #Specifies Part 2 of the object name to be included in the scope for the Compare1 objects. Applies to name for all object types, blank for STOGROUP and Database.
+    objectNamePart3ForCompare1:        #Specifies Part 3 of the object name to be included in the scope for the Compare1 objects. Applies to name for stored procedure, blank for all other object types.
+    objectNamePart1ForCompare2: DB2    #Specifies Part 1 of the object name to be included in the scope for the Compare2 objects. Applies to STOGROUP name, Database name, and creator or schema for all other object types.
+    objectNamePart2ForCompare2:        #Specifies Part 2 of the object name to be included in the scope for the Compare2 objects. Applies to name for all object types, blank for STOGROUP and Database.
+    objectNamePart3ForCompare2:        #Specifies Part 3 of the object name to be included in the scope for the Compare2 objects. Applies to name for stored procedure, blank for all other object types.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToRemoteCatObjectsAsScope:           #Step represents Schema Migration (Compare)-Local Cat to Remote Cat with Objects as Scope. DO NOT alter the name.
+  - stepName: localCat_to_remoteCatObjScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    objectType: DB                     #Valid values are: SG, DB, TS, TB, IX, VW, SY, AL, SP. Type of objects that a comparison includes for both Compare 1 and Compare2 objects.
+    objectNamePart1ForCompare1: DB1    #Specifies Part 1 of the object name to be included in the scope for the Compare1 objects. Applies to STOGROUP name, Database name, and creator or schema for all other object types.
+    objectNamePart2ForCompare1:        #Specifies Part 2 of the object name to be included in the scope for the Compare1 objects. Applies to name for all object types, blank for STOGROUP and Database.
+    objectNamePart3ForCompare1:        #Specifies Part 3 of the object name to be included in the scope for the Compare1 objects. Applies to name for stored procedure, blank for all other object types.
+    compare2Ssid: SSID2                #Db2 subsystem ID that contains the objects with the desired structure definitions. Input as specific name or variable name, like shown here: SSID2 which will be replaced by variable definition from pipeline.
+    objectNamePart1ForCompare2: DB2    #Specifies Part 1 of the object name to be included in the scope for the Compare2 objects. Applies to STOGROUP name, Database name, and creator or schema for all other object types.
+    objectNamePart2ForCompare2:        #Specifies Part 2 of the object name to be included in the scope for the Compare2 objects. Applies to name for all object types, blank for STOGROUP and Database.
+    objectNamePart3ForCompare2:        #Specifies Part 3 of the object name to be included in the scope for the Compare2 objects. Applies to name for stored procedure, blank for all other object types.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToLocalCatBaselineProfileAsScope:  #Step represents Schema Migration (Compare)-Local Cat to Local Cat with Baseline Profile as Scope. DO NOT alter the name.
+  - stepName: localCat_to_localCatBpScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    baselineProfileScopeForCompare1: OWNER.BP2       #Catalog baseline profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 1 objects. Input as specific name or variable name.
+    baselineProfileScopeForCompare2: OWNER.BP3       #Catalog baseline profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 2 objects. Input as specific name or variable name.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToRemoteCatBaselineProfileAsScope:  #Step represents Schema Migration (Compare)-Local Cat to Remote Cat with Baseline Profile as Scope. DO NOT alter the name.
+  - stepName: localCat_to_remoteCatBpScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    baselineProfileScopeForCompare1: OWNER.BP2       #Catalog baseline profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 1 objects. Input as specific name or variable name.
+    compare2Ssid: SSID2                              #Db2 subsystem ID that contains the objects with the desired structure definitions. Input as specific name or variable name, like shown here: SSID2 which will be replaced by variable definition from pipeline.
+    baselineProfileScopeForCompare2: OWNER.BP3       #Catalog baseline profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 2 objects. Input as specific name or variable name.
+    useOutboundMigrateProfileBeforeComparison: false #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:          #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                       #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                              #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:           #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToLocalCatMigrateProfileAsScope:   #Step represents Schema Migration (Compare)-Local Cat to Local Cat with Migrate Profile as Scope. DO NOT alter the name.
+  - stepName: localCat_to_localCatMpScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    outboundMigrateProfileScopeForCompare1: OWNER.MP2 #Outbound migrate profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 1 objects. Input as specific name or variable name.
+    outboundMigrateProfileScopeForCompare2: OWNER.MP3 #Outbound migrate profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 2 objects. Input as specific name or variable name.
+    useOutboundMigrateProfileBeforeComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:           #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                        #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                               #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false   #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:            #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+localCatToRemoteCatMigrateProfileAsScope:   #Step represents Schema Migration (Compare)-Local Cat to Remote Cat with Migrate Profile as Scope. DO NOT alter the name.
+  - stepName: localCat_to_remoteCatMpScope  #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    outboundMigrateProfileScopeForCompare1: OWNER.MP2 #Outbound migrate profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 1 objects. Input as specific name or variable name.
+    compare2Ssid: SSID2                               #Db2 subsystem ID that contains the objects with the desired structure definitions. Input as specific name or variable name, like shown here: SSID2 which will be replaced by variable definition from pipeline.
+    outboundMigrateProfileScopeForCompare2: OWNER.MP3 #Outbound migrate profile (owner.name) with scope rules that identify the objects in the Db2 catalog that are used for the Compare 2 objects. Input as specific name or variable name.
+    useOutboundMigrateProfileBeforeComparison: false  #Valid values are: true or false(default). If set to true, will apply change rules for objects in the Compare2 scope before the comparison. 
+    outboundMigrateProfileBeforeComparison:           #Outbound migrate profile (owner.name) that contains change rules for object names.
+    addCommentToCompare: false                        #Valid values are: true or false(default). If set to true, will put comments in generated CDL file.
+    compareCommentText:                               #Any comment text, up to 254 characters. 
+    useOutboundMigrateProfileAfterComparison: false   #Valid values are: true or false(default). If set to true, will apply change rules for objects in the CDL after comparison. 
+    outboundMigrateProfileAfterComparison:            #Outbound migrate profile (owner.name) that contains change rules for object attributes.
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords:           #Any additional keywords for compare input stream (single or multi-line allowed).
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004         #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2                  #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+useExistingCDLFile:                    #Step represents Schema Migration (Skip Compare)-Use Existing CDL File. DO NOT alter the name.
+  - stepName: existingCDLFile          #User defined step name used in the pipeline for executing this configuration input.
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+    generateJclOnly: false             #Valid values are: true or false(default). If set to true, will generate the JCL only without executing the step. 
+    ssid: DEJM                         #Db2 subsystem ID for comparison.          
+    workIdOwner: MVSAMA                #Owner (part 1) for WorkID.  
+    workIdName: JOB_ID                 #Name (part 2) for WorkID input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.  
+    addCommentToWorkId: false          #Valid values are: true or false(default). If set to true, will put comments in WorkID and generated Worklist.
+    workIdCommentText:                 #Any comment text, up to 254 characters.  
+    cdlPds: $[cdlpds](JOB_ID)                 #Partitioned data set (PDS) and member that contains the output from a Compare (CDL schema changes) and used as the input file for Import. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[cdlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    useInboundMigrateProfile: false           #Valid values are: true or false(default). If set to true, will apply change rules when the resulting CDL is imported and processed. 
+    inboundMigrateProfile:                    #Inbound migrate profile (owner.name) that contains change rules for object attributes.   
+    worklistPds: $[wlpds](JOB_ID)             #Partitioned data set (PDS) and member that contains the worklist of DDL schema changes that Analysis generates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[wlpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    impactReportPds: $[irpds](JOB_ID)         #Partitioned data set (PDS) and member that contains the impact report that Analysis creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[irpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    executionJclPds: $[execpds](JOB_ID)       #Partitioned data set (PDS) and member that contains the execution JCL that JCL Generation creates. PDS/Member values can be input as a specific PDS/Member or variable or BMC AMI DevOps plug-in variable.  This example: $[execpds](JOB_ID) will be replaced by variable definition from AMI_DevOps.properties file and variable definition from pipeline.
+    preExecutionBaselineType: none            #Valid values are: none(default), preExec or full. If set to preExec, will create step to create a baseline in Exec JCL before applying schema changes. If set to full, will create a full-recovery baseline from the worklist to be used later for recovery.
+    preExecutionBaselineProfileName:          #Baseline profile (owner.name) that contains scope rules to create the preExecution or full-recovery baseline.
+    preExecutionBaselineName:                 #Baseline name (owner.name) to be created with preExecutionBaselineProfileName scope rules.    
+    generateCdlRollbackSchemaChanges: false   #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which compares the Db2 catalog to the baseline (before execution) to generate the CDL that the rollback needs.
+    cdlPdsRollback:                           #Partitioned data set (PDS) and member that contains the CDL because of the rollback compare.  
+    createPostExecutionBaseline: false        #Valid values are: true or false(default). If set to true, will create an additional step in Execution JCL which creates a baseline after applying schema changes.
+    postExecutionBaselineProfileName:         #Baseline profile (owner.name) that contains scope rules to create the postExecution baseline.       
+    postExecutionBaselineName:                #Baseline name (owner.name) to be created with postExecutionBaselineProfileName scope rules.  
+    jobCard: |                                #JOB statement to run the JCL.  Typically multiple lines required. 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalImportInputKeywords:            #Any additional keywords for Import input stream (single or multi-line allowed).
+    additionalAnalysisInputKeywords:          #Any additional keywords for Analysis input stream (single or multi-line allowed).
+    additionalJclGenerationInputKeywords:     #Any additional keywords for JCL Generation input stream (single or multi-line allowed).
+    jcl: |                                    #JCL statements that BMC AMI Change Manager for Db2 needs to perform a comparison, import resulting CDL, analyze a worklist and generate execution JCL. Value will be multiple lines.
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004      #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2               #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+outputTransmission:                 #Step represents Output Transmission. DO NOT alter the name.
+  - stepName: download_output       #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false            #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    cdlSourcePds: $[cdlpds]         #Partitioned data set (PDS) on the mainframe from which a member is transferred.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[cdlpds] which will be replaced by variable definition from AMI_DevOps.properties file.       
+    worklistSourcePds: $[wlpds]     #Partitioned data set (PDS) on the mainframe from which a member is transferred.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[wlpds] which will be replaced by variable definition from AMI_DevOps.properties file.             
+    execJclSourcePds: $[execpds]    #Partitioned data set (PDS) on the mainframe from which a member is transferred.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[execpds] which will be replaced by variable definition from AMI_DevOps.properties file.          
+    impactReportSourcePds: $[irpds] #Partitioned data set (PDS) on the mainframe from which a member is transferred.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[irpds] which will be replaced by variable definition from AMI_DevOps.properties file.         
+    sourceMemberName: JOB_ID        #Member on the mainframe that is transferred. Input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.    
+    destinationFileName: JOB_ID     #File in the agent workspace path that is received. Input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline. 
+
+jclExecutionUsingPDSMember:         #Step represents JCL Execution Using mainframe PDS Member. DO NOT alter the name.
+  - stepName: jclExecutionPDS       #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false            #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    jclPds: $[execpds]              #Partitioned data set (PDS) on the mainframe where the JCL member, to be executed, resides. PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[execpds] which will be replaced by variable definition from AMI_DevOps.properties file.
+    jclMemberName: JOB_ID           #JCL member on the mainframe to be executed. Input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline. 
+    acceptableReturnCode: 0004      #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2               #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+jclExecutionUsingFile:              #Step represents JCL Execution Using local File. DO NOT alter the name.  
+  - stepName: jclExecutionFile      #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false            #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    jclDirectory: .                 #JCL directory in agent workspace where the JCL file, to be executed, resides. Relative path is used in this example with a period (.) which is for the agent workspace path.
+    jclFileName: JclFile.txt        #JCL file in the agent workspace path to be executed. Input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline. 
+    acceptableReturnCode: 0004      #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2               #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
+
+jclExecutionUsingFreeForm:          #Step represents JCL Execution Using Freeform JCL. DO NOT alter the name.  
+  - stepName: jclExecutionFreeForm  #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false            #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: false                #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    freeFormJcl: |                  #JCL statements used to execute JCL job. Value will be multiple lines.
+      //SAMPLEST JOB (5213),'SORT   ',
+      //         MSGCLASS=X,NOTIFY=&SYSUID,CLASS=A
+      //*
+      //*     SORT 1ST 5 CHARS IN ASCENDING ORDER
+      //*
+      //STEP01   EXEC PGM=SORT
+      //SYSOUT   DD SYSOUT=*
+      //SORTIN   DD *
+      LINE5
+      LINE2
+      LINE1
+      LINE4
+      LINE3
+      /*
+      //SORTOUT  DD SYSOUT=*
+      //SYSIN    DD *
+           SORT FIELDS=(1,5,CH,A)
+      /*
+      //
+    acceptableReturnCode: 0004      #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2               #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
