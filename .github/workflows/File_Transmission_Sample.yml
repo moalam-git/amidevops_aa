@@ -1,0 +1,53 @@
+#------------------------------------------------#
+# This is complete workflow for end to end jobs  ##
+#------------------------------------------------#
+name: AA-GIT-FT-workflow
+
+on: workflow_dispatch
+#Added comment delete later
+#on:
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
+#  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: dev-aa
+    env:
+     jobid: AA240223
+    container: 
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0001.21
+      # UID which can be used uid=1009(MVSYXJ)
+      options: -u root
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      # Runs a initialization command using the runners shell
+      - name: Initialization
+        run: |
+          echo Initialization started
+          echo "Replacing User Id and Password in the config.yaml file"
+          sed -i "s/USER_ID_AUTH/${{secrets.USER_ID }}/" config.yaml 
+          sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
+          sed -i "s/JOB_ID/${{env.jobid }}/" config.yaml
+          sed -i "s/DDL_FILE_FT_UPLOAD/${{secrets.DDL_FILE }}/" config.yaml
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" config.yaml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" config.yaml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" config.yaml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" config.yaml         
+          echo "-----   Updated config.yaml file -----"  
+      # Sample display step
+      - name: Run a one-line script
+        run: echo Hello, world!
+      # SM - Authentication Step
+      - name: Authentication 
+        run:
+          step authentication
+          
+      # SM - Authentication Step
+      - name: File Transmission Upload 
+        run:
+          step local_to_mainframe
