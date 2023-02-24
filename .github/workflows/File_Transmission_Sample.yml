@@ -30,10 +30,10 @@ jobs:
         run: |
           echo Initialization started
           echo "Replacing User Id and Password in the config.yaml file"
-          sed -i "s/USER_ID_AUTH/${{secrets.USER_ID }}/" config.yaml 
-          sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
+          sed -i "s/USER_ID_AUTH/${{variables.USER_ID }}/" config.yaml 
+          sed -i "s/USER_PASS_AUTH/${{variables.PASSWORD }}/" config.yaml
           sed -i "s/JOB_ID/${{env.jobid }}/" config.yaml
-          sed -i "s/DDL_FILE_FT_UPLOAD/${{secrets.DDL_FILE }}/" config.yaml
+          sed -i "s/DDL_FILE_FT_UPLOAD/${{variables.DDL_FILE }}/" config.yaml
           sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" config.yaml
           sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" config.yaml
           sed -i "s/RUNBY_VALUE/${{github.actor}}/" config.yaml
