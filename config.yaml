@@ -11,7 +11,7 @@
 version: 1.0.0               #Version of the configuration file. DO NOT alter the version value unless config file version is upgraded.
 
 authentication:              #Step used in the pipeline for executing this configuration input. DO NOT alter the name.
-  debugMode: false           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
+  debugMode: true           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
   hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
   port: 32208                #Communication medium port used on mainframe TCP/IP network.
   user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
@@ -23,7 +23,7 @@ authentication:              #Step used in the pipeline for executing this confi
 fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
   - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
     runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
-    debugMode: false                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    debugMode: true                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
     sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
     sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
     destinationPds: MVSAMA.DEVOPS.DDL          #Partitioned data set (PDS) on the mainframe from which a member is received.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[ddlpds] which will be replaced by variable definition from AMI_DevOps.properties file.
