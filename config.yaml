@@ -19,7 +19,8 @@ authentication:              #Step used in the pipeline for executing this confi
   symbolicPropertiesFilePath: symbol_DEJM_BUILD.properties  #File path or file name (in case file is present in root directory) for the BMC AMI DevOps plug-in variable file. Default file name is AMI_DevOps.properties.
   debugModeAllSteps: false   #Valid values are: true or false(default). If set to true, it will override the debugMode property to true in all config steps. 
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE  #Identifier keys used to trace the executed pipeline from the submitted JCL at the mainframe. Typically input as variable names and replaced by variable definition from pipeline. Do NOT alter unless directed by BMC Support.
-  
+
+version: 1.0.0
 fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
   - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
     runStepAlways: fals               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
