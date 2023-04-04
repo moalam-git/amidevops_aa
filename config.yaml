@@ -22,7 +22,7 @@ authentication:              #Step used in the pipeline for executing this confi
   
 fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
   - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
-    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    runStepAlways: fals               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
     debugMode: true                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
     sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
     sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
