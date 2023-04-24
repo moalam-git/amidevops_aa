@@ -16,9 +16,9 @@ jobs:
   build:
     runs-on: dev-aa
     env:
-     jobid: AA240223
+     jobid: AA240423
     container: 
-      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0001.21
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0002.4-SSL
       # UID which can be used uid=1009(MVSYXJ)
       options: -u root
 #       options: -u 1008
@@ -30,6 +30,8 @@ jobs:
       - name: Initialization
         run: |
           echo Initialization started
+          echo ${{ github.workspace }}
+          echo $GITHUB_WORKSPACE
           echo "Replacing User Id and Password in the config.yaml file"
           sed -i "s/USER_ID_AUTH/${{vars.USER_ID }}/" config.yaml 
           sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
