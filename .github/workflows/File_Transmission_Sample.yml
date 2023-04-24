@@ -35,6 +35,8 @@ jobs:
           echo "Replacing User Id and Password in the config.yaml file"
           sed -i "s/USER_ID_AUTH/${{vars.USER_ID }}/" config.yaml 
           sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
+          sed -i "s|CERT_PATH_AUTH|$GITHUB_WORKSPACE/Afrozp12.p12|" config.yaml
+          sed -i "s/CERT_PASS_AUTH/$(secrets.cert_pass)/" config.yaml
           sed -i "s/JOB_ID/${{env.jobid }}/" config.yaml
           sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.DDL_FILE }}/" config.yaml
           sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" config.yaml
