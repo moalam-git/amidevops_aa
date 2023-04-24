@@ -36,7 +36,7 @@ jobs:
           sed -i "s/USER_ID_AUTH/${{vars.USER_ID }}/" config.yaml 
           sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
           sed -i "s|CERT_PATH_AUTH|$GITHUB_WORKSPACE/Afrozp12.p12|" config.yaml
-          sed -i "s/CERT_PASS_AUTH/$(secrets.CERT_PASS)/" config.yaml
+          sed -i "s/CERT_PASS_AUTH/${{secrets.CERT_PASS }}/" config.yaml
           sed -i "s/JOB_ID/${{env.jobid }}/" config.yaml
           sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.DDL_FILE }}/" config.yaml
           sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" config.yaml
@@ -44,7 +44,7 @@ jobs:
           sed -i "s/RUNBY_VALUE/${{github.actor}}/" config.yaml
           sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" config.yaml         
           echo "-----   Updated config.yaml file -----"
-          echo config.yaml
+          cat config.yaml
       # Sample display step
       - name: Run a one-line script
         run: echo Hello, world!
