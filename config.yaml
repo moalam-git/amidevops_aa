@@ -14,7 +14,7 @@ authentication:              #Step used in the pipeline for executing this confi
   debugMode: true           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
   hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
   port: 32208                #Communication medium port used on mainframe TCP/IP network.
-  authenticationType: userBased  #authentication type. Valid values are userBased and certBased. Default is userBased.
+  authenticationType: certBased  #authentication type. Valid values are userBased and certBased. Default is userBased.
   user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
   password: USER_PASS_AUTH   #Mainframe TSO logon password. For security purposes, variable name should be used, like shown here: USER_PASS_AUTH which will be replaced by variable definition from pipeline.
   certificatePath: CERT_PATH_AUTH     #Mainframe client certificate path input as specific name or variable name
@@ -26,7 +26,7 @@ authentication:              #Step used in the pipeline for executing this confi
 version: 1.0.0
 fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
   - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
-    runStepAlways: fals               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
     debugMode: true                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
     sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
     sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
