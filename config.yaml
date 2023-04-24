@@ -14,8 +14,11 @@ authentication:              #Step used in the pipeline for executing this confi
   debugMode: true           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
   hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
   port: 32208                #Communication medium port used on mainframe TCP/IP network.
+  authenticationType: certBased  #authentication type. Valid values are userBased and certBased. Default is userBased.
   user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
   password: USER_PASS_AUTH   #Mainframe TSO logon password. For security purposes, variable name should be used, like shown here: USER_PASS_AUTH which will be replaced by variable definition from pipeline.
+  certificatePath: CERT_PATH_AUTH     #Mainframe client certificate path input as specific name or variable name
+  certificatePassword: CERT_PASS_AUTH #Mainframe client certificate password. For security purposes, variable name should be used
   symbolicPropertiesFilePath: symbol_DEJM_BUILD.properties  #File path or file name (in case file is present in root directory) for the BMC AMI DevOps plug-in variable file. Default file name is AMI_DevOps.properties.
   debugModeAllSteps: false   #Valid values are: true or false(default). If set to true, it will override the debugMode property to true in all config steps. 
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE  #Identifier keys used to trace the executed pipeline from the submitted JCL at the mainframe. Typically input as variable names and replaced by variable definition from pipeline. Do NOT alter unless directed by BMC Support.
