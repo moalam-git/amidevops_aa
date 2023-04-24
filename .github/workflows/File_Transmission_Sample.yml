@@ -22,7 +22,11 @@ jobs:
       # UID which can be used uid=1009(MVSYXJ)
       options: -u root
 #       options: -u 1008
-    steps:
+    steps:    
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
       - name: Upload certificate
         uses: actions/upload-artifact@v2
         with:
@@ -34,10 +38,7 @@ jobs:
         with:
           name: client-certificate
           path: certs
-    
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Check out repository
-        uses: actions/checkout@v3
+        
       # Runs a initialization command using the runners shell
       - name: Initialization
         run: |
