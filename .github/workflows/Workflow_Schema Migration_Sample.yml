@@ -73,11 +73,11 @@ jobs:
           step localCat_to_DDL GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
           
       # Fetch the return code from output file output_local_cat_ddl.properties
-      # and set in output variable to use it later
+      # and set in output variable as environment variable to use in subsequent steps
       - name: Return Code-Local Cat to DDL 
         run: |
           . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
-          RetCod="$compareRC"                     #set the return code in output var
+          echo "RetCod=$compareRC" >> "$GITHUB_ENV"            #set the return code as environment variable
           
       # Execute application step - outputTransmission (download_output)
       - name: Download Files - CDL/WL/EXECJCL/IR 
