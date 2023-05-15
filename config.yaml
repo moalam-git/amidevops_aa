@@ -8,13 +8,13 @@
 #   For property values with multiple lines, specify the pipe | character after the property key.  On the following line, indent the lines with values.   
 ###------------------------------------------------------------------------------------------------------------------------------------
 
-version: 1.0.0               #Version of the configuration file. DO NOT alter the version value unless config file version is upgraded.
+version: 2.0.0               #Version of the configuration file. DO NOT alter the version value unless config file version is upgraded.
 
 authentication:              #Step used in the pipeline for executing this configuration input. DO NOT alter the name.
   debugMode: true           #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log.
   hostName: db2b.bmc.com     #Mainframe host name in URL format or IP address in IPv4 format.
   port: 32208                #Communication medium port used on mainframe TCP/IP network.
-  authenticationType: certBased  #authentication type. Valid values are userBased and certBased. Default is userBased.
+  authenticationType: userBased  #authentication type. Valid values are userBased and certBased. Default is userBased.
   user: USER_ID_AUTH         #Mainframe TSO logon ID input as specific name or variable name, like shown here: USER_ID_AUTH which will be replaced by variable definition from pipeline.
   password: USER_PASS_AUTH   #Mainframe TSO logon password. For security purposes, variable name should be used, like shown here: USER_PASS_AUTH which will be replaced by variable definition from pipeline.
   certificatePath: CERT_PATH_AUTH     #Mainframe client certificate path input as specific name or variable name
@@ -23,12 +23,118 @@ authentication:              #Step used in the pipeline for executing this confi
   debugModeAllSteps: false   #Valid values are: true or false(default). If set to true, it will override the debugMode property to true in all config steps. 
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE  #Identifier keys used to trace the executed pipeline from the submitted JCL at the mainframe. Typically input as variable names and replaced by variable definition from pipeline. Do NOT alter unless directed by BMC Support.
 
-version: 1.0.0
 fileUpload:                            #Step represents File Transmission to mainframe (upload). DO NOT alter the name.
   - stepName: local_to_mainframe       #User defined step name, used in the pipeline, for executing this configuration input.
     runStepAlways: false               #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
     debugMode: true                   #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
     sourceDirectory: .                 #Path in agent workspace from which a file is transferred. Relative path is used in this example with a period (.) which is for the agent workspace path.
     sourceFileName: DDL_FILE_FT_UPLOAD #File on the client that is transferred. File must be a plain text file. 
-    destinationPds: MVSAMA.DEVOPS.DDL          #Partitioned data set (PDS) on the mainframe from which a member is received.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[ddlpds] which will be replaced by variable definition from AMI_DevOps.properties file.
+    destinationPds: $[ddlpds]          #Partitioned data set (PDS) on the mainframe from which a member is received.  PDS value can be input as a specific PDS or BMC AMI DevOps plug-in variable, like shown here: $[ddlpds] which will be replaced by variable definition from AMI_DevOps.properties file.
     destinationMember: JOB_ID          #Member on the mainframe that is received.  Member can be input as specific name or variable name, like shown here: JOB_ID which will be replaced by variable definition from pipeline.
+
+localCatToDDL:
+  - stepName: localCat_to_DDL
+    runStepAlways: false
+    debugMode: false
+    generateJclOnly: false
+    ssid: DEJM
+    workIdOwner: MVSAMA
+    workIdName: JOB_ID
+    addCommentToWorkId: false
+    workIdCommentText:
+    compare2DdlPds: $[ddlpds](JOB_ID)
+    useOutboundMigrateProfileBeforeComparison: false
+    outboundMigrateProfileBeforeComparison:
+    addCommentToCompare: false
+    compareCommentText:
+    useOutboundMigrateProfileAfterComparison: false
+    outboundMigrateProfileAfterComparison:
+    cdlPds: $[cdlpds](JOB_ID)
+    useInboundMigrateProfile: false
+    inboundMigrateProfile:
+    worklistPds: $[wlpds](JOB_ID)
+    impactReportPds: $[irpds](JOB_ID)
+    executionJclPds: $[execpds](JOB_ID)
+    preExecutionBaselineType: none
+    preExecutionBaselineProfileName:
+    preExecutionBaselineName:
+    generateCdlRollbackSchemaChanges: false
+    cdlPdsRollback:
+    createPostExecutionBaseline: false
+    postExecutionBaselineProfileName:
+    postExecutionBaselineName:
+    jobCard: | 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+    additionalCompareInputKeywords: NODEFINE
+    additionalImportInputKeywords:
+    additionalAnalysisInputKeywords:
+    additionalJclGenerationInputKeywords:
+    jcl: |
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=${compare2DdlPds}
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
+
+outputTransmission:
+  - stepName: download_output
+    runStepAlways: false
+    debugMode: false
+    cdlSourcePds: $[cdlpds]
+    worklistSourcePds: $[wlpds]
+    execJclSourcePds: $[execpds]
+    impactReportSourcePds: $[irpds]
+    sourceMemberName: JOB_ID
+    destinationDirectory: .
+    destinationFileName: JOB_ID
+
+jclExecutionUsingPDSMember:
+  - stepName: jclExecutionPDS
+    runStepAlways: false
+    debugMode: false
+    jclPds: $[execpds]
+    jclMemberName: JOB_ID
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
