@@ -96,7 +96,7 @@ jobs:
       # Method-1: Using GitHub Actions based condition keyword- Run step only if condition is satisfied. 
       ###
       - name: Run JCL to Implement Schema Change
-        if: ${{ success() && env.RetCod <= '0000' }}
+        if: ${{ success() && env.RetCod <= '0004' }}
         run: |
           echo $RetCod
           echo "condition matched"
