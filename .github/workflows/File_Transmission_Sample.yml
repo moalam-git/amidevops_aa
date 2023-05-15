@@ -18,7 +18,7 @@ jobs:
     env:
      jobid: AA240423
     container: 
-      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0002.4-SSL
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0002.8-SSL
       # UID which can be used uid=1009(MVSYXJ)
       options: -u root
 #       options: -u 1008
@@ -27,17 +27,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
         
-      - name: Upload certificate
-        uses: actions/upload-artifact@v2
-        with:
-          name: client-certificate
-          path: certs/Afrozp12.p12
+#       - name: Upload certificate
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: client-certificate
+#           path: certs/Afrozp12.p12
           
-      - name: Download certificate
-        uses: actions/download-artifact@v2
-        with:
-          name: client-certificate
-          path: certs1
+#       - name: Download certificate
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: client-certificate
+#           path: certs1
         
       # Runs a initialization command using the runners shell
       - name: Initialization
@@ -49,8 +49,8 @@ jobs:
           sed -i "s/USER_ID_AUTH/${{vars.USER_ID }}/" config.yaml 
           sed -i "s/USER_PASS_AUTH/${{secrets.PASSWORD }}/" config.yaml
           #sed -i "s|CERT_PATH_AUTH|$GITHUB_WORKSPACE/Afrozp12.p12|" config.yaml
-          sed -i "s|CERT_PATH_AUTH|$GITHUB_WORKSPACE/certs1/Afrozp12.p12|" config.yaml
-          sed -i "s/CERT_PASS_AUTH/${{secrets.CERT_PASS }}/" config.yaml
+          #sed -i "s|CERT_PATH_AUTH|$GITHUB_WORKSPACE/certs1/Afrozp12.p12|" config.yaml
+          #sed -i "s/CERT_PASS_AUTH/${{secrets.CERT_PASS }}/" config.yaml
           sed -i "s/JOB_ID/${{env.jobid }}/" config.yaml
           sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.DDL_FILE }}/" config.yaml
           sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" config.yaml
@@ -71,3 +71,31 @@ jobs:
       - name: File Transmission Upload 
         run:
           step local_to_mainframe
+          
+      # Execute application step - localCatToDDL (localCat_to_DDL)
+      - name: Schema Migration-Local Cat to DDL 
+        run:
+          step localCat_to_DDL
+          
+      # Fetch the return code from output file output_local_cat_ddl.properties
+      # and set in output variable to use it later
+      - name: Return Code-Local Cat to DDL 
+        run: |
+          source output_local_cat_ddl.properties  #read and fetch the return code from output file
+          RetCod="$compareRC"                     #set the return code in output var
+          echo "RetCod=${RetCod}" >> $GITHUB_ENV 
+          
+      # Execute application step - outputTransmission (download_output)
+      - name: Download Files - CDL/WL/EXECJCL/IR 
+        run:
+          step download_output
+          
+      ###
+      # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
+      # Method-1: Using GitHub Actions based condition keyword- Run step only if condition is satisfied. 
+      ###
+      - name: Run JCL to Implement Schema Change
+        if: ${{ success() && env.RetCod <= '0004' }}
+        run: |
+          echo $RetCod
+          step jclExecutionPDS GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
