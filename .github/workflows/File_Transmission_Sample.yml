@@ -83,7 +83,7 @@ jobs:
         run: |
           . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
           RetCod="$compareRC"                     #set the return code in output var
-          echo "RetCod=${RetCod}" >> $GITHUB_ENV 
+          #echo "RetCod=${RetCod}" >> $GITHUB_ENV 
           
       # Execute application step - outputTransmission (download_output)
       - name: Download Files - CDL/WL/EXECJCL/IR 
@@ -98,4 +98,4 @@ jobs:
         if: ${{ success() && env.RetCod <= '0004' }}
         run: |
           echo $RetCod
-          step jclExecutionPDS GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step jclExecutionPDS
