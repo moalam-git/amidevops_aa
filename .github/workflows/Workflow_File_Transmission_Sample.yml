@@ -12,17 +12,17 @@
 #     Example of properties of authentication step is taken from default file name config.yml maintained in root folder:
 #            step authentication
 ###------------------------------------------------------------------------------------------------------------------------------------
-name: <name of the workflow>      #specify workflow name
+name: SAMPLE_FILE_TRANSMISSION      #specify workflow name
 
 on:
   workflow_dispatch               #manual trigger of the workflow
 
 jobs:
   File_Transmission:              #name of the job
-    runs-on: <name of the runner> #specify runner name
+    runs-on: dev-aa               #specify runner name
     container: 
-      image: <Image location>/devopsuc:13.01.00.0002-GA
-      options: -u root
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0002.8-SSL
+      options: -u 1008
       
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -64,3 +64,9 @@ jobs:
       - name: File Transmission 
         run:
           step local_to_mainframe Config_File_Transmission.yml
+          
+      - name: Upload certificate
+        uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: .
