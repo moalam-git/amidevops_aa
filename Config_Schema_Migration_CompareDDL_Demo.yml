@@ -13,8 +13,8 @@
 version: 2.0.0
 
 authentication:
-  debugMode: false
-  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  debugMode: true
+  hostName: db2a.bmc.com          #specify the mainframe host name or IP address
   port: 32208
   authenticationType: userBased
   user: USER_ID_AUTH
@@ -28,7 +28,7 @@ authentication:
 fileUpload:
   - stepName: local_to_mainframe
     runStepAlways: false
-    debugMode: false
+    debugMode: true
     sourceDirectory: .
     sourceFileName: DDL_FILE_FT_UPLOAD
     destinationPds: $[ddlpds]
@@ -37,10 +37,10 @@ fileUpload:
 localCatToDDL:
   - stepName: localCat_to_DDL
     runStepAlways: false
-    debugMode: false
+    debugMode: true
     generateJclOnly: false
-    ssid: <Db2 subsystem ID>             #specify Db2 subsystem ID
-    workIdOwner: <Workid owner name>     #specify Owner (part 1) for WorkID
+    ssid: DEJM             #specify Db2 subsystem ID
+    workIdOwner: MVSAMA     #specify Owner (part 1) for WorkID
     workIdName: JOB_ID
     addCommentToWorkId: false
     workIdCommentText:
@@ -68,6 +68,8 @@ localCatToDDL:
     jobCard: | 
       //DEVOPS JOB ($[acctno]),'COMPARE',
       // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+      /*ROUTE XEQ BMCPLX1  
+      /*JOBPARM SYSAFF=DB2B
     additionalCompareInputKeywords: NODEFINE
     additionalImportInputKeywords:
     additionalAnalysisInputKeywords:
@@ -123,7 +125,7 @@ localCatToDDL:
 outputTransmission:
   - stepName: download_output
     runStepAlways: false
-    debugMode: false
+    debugMode: true
     cdlSourcePds: $[cdlpds]
     worklistSourcePds: $[wlpds]
     execJclSourcePds: $[execpds]
@@ -133,9 +135,17 @@ outputTransmission:
     destinationFileName: JOB_ID
 
 jclExecutionUsingPDSMember:
+  - stepName: house_keeping    
+    runStepAlways: false
+    debugMode: true
+    jclPds: MVSAMA.JCL
+    jclMemberName: DODECA
+    acceptableReturnCode: 0008
+    maxJobWaitTime: 2
+    
   - stepName: jclExecutionPDS
     runStepAlways: false
-    debugMode: false
+    debugMode: true
     jclPds: $[execpds]
     jclMemberName: JOB_ID
     acceptableReturnCode: 0004
