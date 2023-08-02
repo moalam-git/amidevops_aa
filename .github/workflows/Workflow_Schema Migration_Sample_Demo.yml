@@ -11,7 +11,7 @@
 #            step authentication GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
 #  d) GitHub Actions based "if:" condition command is used.
 ###------------------------------------------------------------------------------------------------------------------------------------
-name: Workflow_Schema_Migration_Sample   #name of the workflow
+name: Workflow_Schema_Migration_Sample_Demo   #name of the workflow
 
 on:
   workflow_dispatch               #manual trigger of the workflow
