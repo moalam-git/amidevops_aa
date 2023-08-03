@@ -18,10 +18,11 @@ on:
 
 jobs:
   Schema_Change:                  #name of the job
-    runs-on: <name of the runner> #specify runner name
-    container: 
-      image: <Image location>/devopsuc:13.01.00.0002-GA
-      options: -u <uid>           #specify uid of the user running the runner
+    runs-on: dev-aa               #specify runner name
+    container:
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.5-SSL
+#       image: <Image location>/devopsuc:13.01.00.0002-GA
+      options: -u 1008           #specify uid of the user running the runner
       
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -37,37 +38,42 @@ jobs:
       # Perform various initialization functions using Linux based command sed
       - name: Initialization
         run: |
-          echo "Replace variables defined in GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml file"
+          echo "Replace variables defined in Config_Schema_Migration_CompareDDL_Demo.yml file"
           # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
-          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           # For certBased Authentication, uncomment the following 2 sed commands
-          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" Config_Schema_Migration_CompareDDL_Demo.yml
+          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           # Use syntax \<var name\> to find and replace the exact matching word
-          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.ddl_file}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.ddl_file}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
-          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          sed -i "s/RUNBY_VALUE/${{github.actor}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
-          echo "-----   GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml file is updated -----"
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          echo "-----   Config_Schema_Migration_CompareDDL_Demo.yml file is updated -----"
       
       # Execute application step - authentication
       - name: Authentication 
         run:
-          step authentication GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step authentication Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Execute application step - house_keeping (to drop db2 objects if already created)
+      - name: House Keeping 
+        run:
+          step house_keeping Config_Schema_Migration_CompareDDL_Demo.yml      
           
       # Execute application step - fileUpload (local_to_mainframe)
       - name: Transfer DDL to mainframe 
         run:
-          step local_to_mainframe GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step local_to_mainframe Config_Schema_Migration_CompareDDL_Demo.yml
           
       # Execute application step - localCatToDDL (localCat_to_DDL)
       - name: Schema Migration-Local Cat to DDL 
         run:
-          step localCat_to_DDL GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step localCat_to_DDL Config_Schema_Migration_CompareDDL_Demo.yml
           
       # Fetch the return code from output file output_local_cat_ddl.properties
       # and set in output variable as environment variable to use in subsequent steps
@@ -79,7 +85,7 @@ jobs:
       # Execute application step - outputTransmission (download_output)
       - name: Download Files - CDL/WL/EXECJCL/IR 
         run:
-          step download_output GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step download_output Config_Schema_Migration_CompareDDL_Demo.yml
           
       ###
       # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
@@ -88,4 +94,4 @@ jobs:
       - name: Run JCL to Implement Schema Change
         if: ${{ success() && env.RetCod <= '0004' }}
         run:
-          step jclExecutionPDS GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+          step jclExecutionPDS Config_Schema_Migration_CompareDDL_Demo.yml
