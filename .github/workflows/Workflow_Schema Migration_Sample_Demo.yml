@@ -112,4 +112,4 @@ jobs:
       - name: Run JCL to Implement Schema Change
         if: ${{ success() && env.RetCodeSchemaMig <= '0004' && env.RetCodeJclExec <= '0004' }}
         run:
-          step jclExecutionPDS Config_Schema_Migration_CompareDDL_Demo.yml
+          step implement_schema_change Config_Schema_Migration_CompareDDL_Demo.yml
