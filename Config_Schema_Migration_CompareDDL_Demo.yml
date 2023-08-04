@@ -144,7 +144,7 @@ jclExecutionUsingPDSMember:
     maxJobWaitTime: 2
 
   - stepName: iebcopy_jcl    
-    runStepAlways: false
+    runStepAlways: true
     debugMode: true
     jclPds: MVSAMA.JCL
     jclMemberName: KBCDEMO
