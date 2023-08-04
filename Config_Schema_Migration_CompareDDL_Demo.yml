@@ -142,8 +142,16 @@ jclExecutionUsingPDSMember:
     jclMemberName: DODECA
     acceptableReturnCode: 0008
     maxJobWaitTime: 2
+
+  - stepName: iebcopy_jcl    
+    runStepAlways: false
+    debugMode: true
+    jclPds: MVSAMA.JCL
+    jclMemberName: KBCDEMO
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
     
-  - stepName: jclExecutionPDS
+  - stepName: implement_schema_change
     runStepAlways: false
     debugMode: true
     jclPds: $[execpds]
