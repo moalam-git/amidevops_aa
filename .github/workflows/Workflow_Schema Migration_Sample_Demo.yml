@@ -102,8 +102,8 @@ jobs:
       # Display the return codes before implementing the schema changes
       - name: Display Return codes 
         run: |
-          echo "Step Local Cat to DDL Return Code   : env.RetCodeSchemaMig"
-          echo "Step Customized User JCL Return Code: env.RetCodeJclExec"
+          echo "Step Local Cat to DDL Return Code   :" env.RetCodeSchemaMig
+          echo "Step Customized User JCL Return Code:" env.RetCodeJclExec
           
       ###
       # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
