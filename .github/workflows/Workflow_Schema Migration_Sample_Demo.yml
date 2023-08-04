@@ -80,18 +80,36 @@ jobs:
       - name: Return Code-Local Cat to DDL 
         run: |
           . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
-          echo "RetCod=$compareRC" >> "$GITHUB_ENV"            #set the return code as environment variable
+          echo "RetCodeSchemaMig=$compareRC" >> "$GITHUB_ENV"            #set the return code as environment variable
           
+      # Execute any customized JCL 
+      - name: Customized User JCL 
+        run:
+          step iebcopy_jcl Config_Schema_Migration_CompareDDL_Demo.yml    
+
+      # Fetch the return code of previously executed JCL from output file output_jcl_exec_pds.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code of Step- Customized User JCL 
+        run: |
+          . $GITHUB_WORKSPACE/output_jcl_exec_pds.properties   #read and fetch the return code from output file
+          echo "RetCodeJclExec=$jclExecRC" >> "$GITHUB_ENV"     #set the return code as environment variable
+
       # Execute application step - outputTransmission (download_output)
       - name: Download Files - CDL/WL/EXECJCL/IR 
         run:
           step download_output Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Display the return codes before implementing the schema changes
+      - name: Display Return codes 
+        run: |
+          echo "Step Local Cat to DDL Return Code   : env.RetCodeSchemaMig"
+          echo "Step Customized User JCL Return Code: env.RetCodeJclExec"
           
       ###
       # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
       # Using GitHub Actions based if condition - Run step only if condition is satisfied.
       ###
       - name: Run JCL to Implement Schema Change
-        if: ${{ success() && env.RetCod <= '0004' }}
+        if: ${{ success() && env.RetCodeSchemaMig <= '0004' && env.RetCodeJclExec <= '0004' }}
         run:
           step jclExecutionPDS Config_Schema_Migration_CompareDDL_Demo.yml
