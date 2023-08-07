@@ -21,7 +21,6 @@ jobs:
     runs-on: dev-aa               #specify runner name
     container:
       image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.5-SSL
-#       image: <Image location>/devopsuc:13.01.00.0002-GA
       options: -u 1008           #specify uid of the user running the runner
       
     steps:
@@ -89,6 +88,9 @@ jobs:
 
       # Fetch the return code of previously executed JCL from output file output_jcl_exec_pds.properties
       # and set in output variable as environment variable to use in subsequent steps
+      # if above JCL is run from PDS  - output file name is 'output_jcl_exec_pds.properties'
+      # if above JCL is run from file - output file name is 'output_jcl_exec_file.properties'
+      # if above JCL is run from freeform JCL - output file name is 'output_jcl_exec_freeform.properties'
       - name: Return Code of Step- Customized User JCL 
         run: |
           . $GITHUB_WORKSPACE/output_jcl_exec_pds.properties   #read and fetch the return code from output file
