@@ -81,10 +81,10 @@ jobs:
           . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
           echo "RetCodeSchemaMig=$compareRC" >> "$GITHUB_ENV"            #set the return code as environment variable
           
-      # Execute any customized JCL - for example, here JCL that analyze the impact report can be added
-      - name: Customized User JCL 
+      # Execute Review Impact Report JCL that analyze and review the impact report
+      - name: Review Impact Report 
         run:
-          step iebcopy_jcl Config_Schema_Migration_CompareDDL_Demo.yml    
+          step impact_report_jcl Config_Schema_Migration_CompareDDL_Demo.yml    
 
       # Fetch the return code of previously executed JCL from output file output_jcl_exec_pds.properties
       # and set in output variable as environment variable to use in subsequent steps
