@@ -91,7 +91,7 @@ jobs:
       # if above JCL is run from PDS  - output file name is 'output_jcl_exec_pds.properties'
       # if above JCL is run from file - output file name is 'output_jcl_exec_file.properties'
       # if above JCL is run from freeform JCL - output file name is 'output_jcl_exec_freeform.properties'
-      - name: Return Code of Step- Customized User JCL 
+      - name: Return Code of Step- Review Impact Report 
         run: |
           . $GITHUB_WORKSPACE/output_jcl_exec_pds.properties   #read and fetch the return code from output file
           echo "RetCodeJclExec=$jclExecRC" >> "$GITHUB_ENV"     #set the return code as environment variable
