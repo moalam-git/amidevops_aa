@@ -28,12 +28,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
       
-      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
-      # from repository into path specified with -d parameter (ex. /opt/secret)  
-      # - name: unzip client certificate
-      #   run: |
-      #    unzip -P "${{secrets.zip_cert_pass}}" <clientCertificateName>.p12 -d /opt/secret
-      
       # Perform various initialization functions using Linux based command sed
       - name: Initialization
         run: |
