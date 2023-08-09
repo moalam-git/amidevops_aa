@@ -35,9 +35,6 @@ jobs:
           # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
           sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
-          # For certBased Authentication, uncomment the following 2 sed commands
-          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" Config_Schema_Migration_CompareDDL_Demo.yml
-          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           # Use syntax \<var name\> to find and replace the exact matching word
           sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
           sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.ddl_file}}/" Config_Schema_Migration_CompareDDL_Demo.yml
