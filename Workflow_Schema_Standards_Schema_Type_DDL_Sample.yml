@@ -1,0 +1,63 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Workflow_Schema_Standards_Schema_Type_DDL_Sample.yml (for GitHub Actions)
+###------------------------------------------------------------------------------------------------------------------------------------
+# The sample workflow performs Authentication + Schema Standards (schema type-DDL) steps using application defined command step.
+# The sample workflow script is defined to use various items like below:
+#  a) References to variables added through GitHub Actions secrets and variables.
+#  b) Use of Linux based sed command to replace input as variable name by variable definition from GitHub Actions secrets and variables.
+#  c) Use of configuration file (Config_Schema_Standards_Schema_Type_DDL.yml), that is maintained in default root folder.
+#     Example of properties of authentication step is taken from Config_Schema_Standards_Schema_Type_DDL.yml file:
+#            step authentication Config_Schema_Standards_Schema_Type_DDL.yml
+#     Note: If workflow executes with default configuration file name config.yml, that is maintained in root folder, then file name is not required in step command.
+#     Example of properties of authentication step is taken from default file name config.yml maintained in root folder:
+#            step authentication
+###------------------------------------------------------------------------------------------------------------------------------------
+name: Workflow_Schema_Standards_DDL_Sample   #name of the workflow
+
+on:
+  workflow_dispatch               #manual trigger of the workflow
+
+jobs:
+  Schema_Standards_DDL:           #name of the job
+    runs-on: <name of the runner> #specify runner name
+    container: 
+      image: <Image location>/devopsuc:13.01.00.0003-GA
+      options: -u <uid>           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
+      # from repository into path specified with -d parameter (ex. /opt/secret)  
+      # - name: unzip client certificate
+      #   run: |
+      #    unzip -P "${{secrets.zip_cert_pass}}" <clientCertificateName>.p12 -d /opt/secret
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in Config_Schema_Standards_Schema_Type_DDL.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          # For certBased Authentication, uncomment the following 2 sed commands
+          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" Config_Schema_Standards_Schema_Type_DDL.yml
+          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Standards_Schema_Type_DDL.yml         
+          echo "-----   Config_Schema_Standards_Schema_Type_DDL.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication Config_Schema_Standards_Schema_Type_DDL.yml
+          
+      # Execute application step - schemaStandards (schema_standards_ddl)
+      - name: Schema Standards – Analyze DDL
+        run:
+          step schema_standards_ddl Config_Schema_Standards_Schema_Type_DDL.yml

@@ -1,0 +1,88 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Config_Schema_Standards_Schema_Type_DDL.yml
+###------------------------------------------------------------------------------------------------------------------------------------
+# This config yaml file is a ready-made sample of the Authentication and Schema Standards (schema type-DDL) steps for your reference and convenience. You can copy and customize the configuration.
+# Each line represents a property (key-value pair). 
+#   The property key (left side of colon) is a fixed keyword and should not be altered. 
+#   The property value (right side of colon) is for user input.    
+#   The alignment or spacing for the property key and value should not be changed. It may result in an unexpected error. The YAML file only works with proper alignment.
+#   For property values with multiple lines, specify the pipe | character after the property key.  On the following line, indent the lines with values.
+# Refer to the sample config file, 'Config_Schema_Standards_ALL_Schema_Types.yml', for the property key help text.
+###------------------------------------------------------------------------------------------------------------------------------------
+
+version: 3.0.0
+
+authentication:
+  debugMode: false
+  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  port: 32208
+  authenticationType: userBased
+  user: USER_ID_AUTH
+  password: USER_PASS_AUTH
+  certificatePath: CERT_PATH_AUTH
+  certificatePassword: CERT_PASS_AUTH
+  symbolicPropertiesFilePath: AMI_DevOps.properties
+  debugModeAllSteps: false
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
+  
+schemaStandards:
+  - stepName: schema_standards_ddl
+    debugMode: false
+    generateJclOnly: false
+    ssid: <Db2 subsystem ID>             #specify Db2 subsystem ID
+    ruleSetName: $BMC SAMPLE RULE SET
+    violationResponse: FAIL
+    schemaType: DDL
+    inputSchemaSource: <DDL pds data set name>  #specify DDL PDS data set and member name
+    useOutboundMigrateProfileAfterRead: false
+    outboundMigrateProfileAfterRead:
+    jobCard: |
+      //AMASTDS JOB ($[acctno]),'SCHEMA STANDARDS',
+      //  CLASS=A,MSGLEVEL=(1,1)
+      //*
+    schemaStandardsInputStream: |
+      //SCHEMAS.AMAIN  DD DISP=SHR,
+      //           DSN=${inputSchemaSource}
+      //SCHEMAS.ALUIN  DD *,SYMBOLS=JCLONLY
+        SSID &SSID
+        SOURCETYPE DDL
+        RULESET (&RULESET)
+        LOGMODE &LOGMODE
+        VTIBUCKETSIZE &VTIBSZ
+    debugInputStream: |
+      //**********************************************************************
+      //* The DDs below are used for debugging of Schema Standards
+      //**********************************************************************
+      //* $XMLOUT$ contains the objects that will be processed
+      //*SCHEMAS.$XMLOUT$ DD SYSOUT=*
+      //* $RULETRE contains the rules that will run against the objects
+      //*SCHEMAS.$RULETRE DD SYSOUT=*
+      //* $VTIRULE contains the VTI rules that were tested
+      //*SCHEMAS.$VTIRULE DD SYSOUT=*
+      //**********************************************************************
+    jcl: |
+      ${jobCard}
+      //*
+      //       JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB  DD  DISP=SHR,
+      //            DSN=$[joblib1]
+      //        DD  DISP=SHR,
+      //            DSN=$[joblib2]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnexit]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnload]
+      //*
+      // EXPORT SYMLIST=(*)
+      //*
+      // SET SSID=${ssid}
+      // SET GUDPLAN=$[gudplan]
+      // SET RULESET='${ruleSetName}'
+      // SET LOGMODE=${violationResponse}
+      // SET VTIBSZ=20
+      //*******************************************************
+      //SCHSTDS  EXEC AMAPROCS
+      ${schemaStandardsInputStream}
+      ${debugInputStream}
+    maxJobWaitTime:  2
