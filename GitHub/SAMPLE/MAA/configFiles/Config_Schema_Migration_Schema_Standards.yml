@@ -13,8 +13,8 @@
 version: 3.0.0
 
 authentication:
-  debugMode: false
-  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  debugMode: true
+  hostName: mvsdb2b.bmc.com          #specify the mainframe host name or IP address
   port: 32208
   authenticationType: userBased
   user: USER_ID_AUTH
@@ -28,14 +28,14 @@ authentication:
 localCatToDDL:
   - stepName: localCat_to_DDL
     runStepAlways: false
-    debugMode: false
+    debugMode: true
     generateJclOnly: false
-    ssid: <Db2 subsystem ID>             #specify Db2 subsystem ID
-    workIdOwner: <Workid owner name>     #specify Owner (part 1) for WorkID
+    ssid: DEJM             #specify Db2 subsystem ID
+    workIdOwner: MVSAMA     #specify Owner (part 1) for WorkID
     workIdName: JOB_ID
     addCommentToWorkId: false
     workIdCommentText:
-    compare2DdlPds: $[ddlpds](JOB_ID)
+    compare2DdlPds: $[ddlpds](AA020719)
     useOutboundMigrateProfileBeforeComparison: false
     outboundMigrateProfileBeforeComparison:
     addCommentToCompare: false
@@ -113,9 +113,9 @@ localCatToDDL:
 
 schemaStandards:
   - stepName: schema_standards_cdl
-    debugMode: false
+    debugMode: true
     generateJclOnly: false
-    ssid: <Db2 subsystem ID>             #specify Db2 subsystem ID
+    ssid: DEJM             #specify Db2 subsystem ID
     ruleSetName: $BMC SAMPLE RULE SET
     violationResponse: FAIL
     schemaType: CDL
