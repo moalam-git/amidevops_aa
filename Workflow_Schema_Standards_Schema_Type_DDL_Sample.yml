@@ -19,10 +19,10 @@ on:
 
 jobs:
   Schema_Standards_DDL:           #name of the job
-    runs-on: <name of the runner> #specify runner name
+    runs-on: dev-aa               #specify runner name
     container: 
-      image: <Image location>/devopsuc:13.01.00.0003-GA
-      options: -u <uid>           #specify uid of the user running the runner
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.7-SSL
+      options: -u 1008           #specify uid of the user running the runner
       
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
