@@ -20,7 +20,7 @@ jobs:
   Schema_Migration_Schema_Standards_CDL:           #name of the job
     runs-on: dev-aa #specify runner name
     container: 
-      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.7-SSL
+      image: pun-harborpd-01.bmc.com/amidevopsdb2/devopsuc:13.01.00.0003.8-RC
       options: -u 1008           #specify uid of the user running the runner
       
     steps:
