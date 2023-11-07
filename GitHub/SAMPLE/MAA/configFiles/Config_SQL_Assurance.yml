@@ -1,0 +1,148 @@
+version: 2.0.0
+
+authentication:
+  debugMode: true
+  hostName: mvsdb2b.bmc.com
+  port: 32208
+  authenticationType: userBased             #valid values are userBased or certBased (case insensitive)
+  user: USER_ID_AUTH
+  password: USER_PASS_AUTH
+  certificatePath: CERT_PATH_AUTH
+  certificatePassword: CERT_PASS_AUTH
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEJM.properties
+  debugModeAllSteps: false
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
+  
+analyzeStaticSql:
+  - stepName: static_sql_plan
+    debugMode: TRUe                           #valid values are true or false (case insensitive)
+    generateJclOnly: False                    #valid values are true or false (case insensitive)
+    ssid: dejm
+    violationResponse: Warn                   #valid values are warn or fail (case insensitive)
+    explainMethod: Static                     #valid values are static or dynamic (case insensitive)
+    objectType: Plan                          #valid values are plan or package (case insensitive)
+    # objectName: ACTD1F8B
+    objectName: JZLPL01
+    # objectName: $[objname]
+    useObjectListFile: FALSE                  #valid values are true or false (case insensitive)
+    objectListContinueOnError: false          #valid values are true or false (case insensitive) 
+    objectListFilePath: Object_List_File_Plan_100plus.txt
+    jobCard: |
+      //COBSSQL JOB ($[acctno]),'STATIC_SQL_PLAN',
+      // CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID    
+    sqlExplorerInputStream: |
+      //PSSMAIN.SYSIN DD * 
+      --NEWOBJ 
+      OBJECT=PLAN 
+      NAME="${objectName}" 
+      RULES=$[rules] 
+      RULEDSN="$[ruledsn]" 
+      PLANTBL=${explainMethod} 
+      CURRENCY=$[currency] 
+      MSGLEVEL=ALL
+      --ENDOBJ 
+    jcl: |
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      //*
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //*
+      // EXPORT SYMLIST=(*)
+      //*
+      // SET SSID=${ssid}
+      // SET PSSPLAN=$[pssplan]
+      // SET GUDPLAN=$[gudplan]
+      // SET GENDEBUG='${debugMode}'
+      // SET LOGMODE='${violationResponse}'
+      // SET RULSPACE='SPACE=(CYL,(10,10)),'
+      // SET VTIBSZ=20
+      //*-----------------------------------------------------------------
+      //*
+      //SQLXPLOR EXEC COBPRPSS
+      ${sqlExplorerInputStream}
+      //RULESOUT.SYSUT2 DD &GENDEBUG
+      //*-----------------------------------------------------------------
+      //*
+      //IFPSS    IF (SQLXPLOR.PSSMAIN.RC EQ 4) THEN
+      //COBLOGER EXEC COBPRLOG
+      //LOGGER.AS$INPUT DD DSN=&&RULESOUT,
+      //            DISP=(OLD,DELETE)
+      //IFPSSEND ENDIF
+      //*
+    maxJobWaitTime: 10
+
+  - stepName: static_sql_package
+    debugMode: TRUE                  #valid values are true or false (case insensitive)
+    generateJclOnly: False           #valid values are true or false (case insensitive)
+    ssid: DEjm
+    violationResponse: FAIL          #valid values are warn or fail (case insensitive)
+    explainMethod: dynamic           #valid values are static or dynamic (case insensitive)
+    objectType: PACKAGE              #valid values are plan or package (case insensitive)
+    # objectName: ACTD1F8B
+    objectName: ACSBQCO
+    collectionIdPackage: RDAJZL
+    versionPackage: ACS_1120_BPU7868
+    useObjectListFile: false          #valid values are true or false (case insensitive)
+    objectListContinueOnError: FALSe  #valid values are true or false (case insensitive)
+    objectListFilePath: Object_List_File_PKG_100plus.txt
+    jobCard: |
+      //COBSSQL JOB ($[acctno]),'STATIC_SQL_PACKAGE',
+      // CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID    
+    sqlExplorerInputStream: |
+      //PSSMAIN.SYSIN DD * 
+      --NEWOBJ 
+      OBJECT=PACKAGE 
+      NAME="${objectName}"
+      COLLID="${collectionIdPackage}"
+      VERSION="${versionPackage}" 
+      RULES=$[rules] 
+      RULEDSN="$[ruledsn]" 
+      PLANTBL=${explainMethod} 
+      CURRENCY=$[currency] 
+      MSGLEVEL=ALL
+      --ENDOBJ 
+    jcl: |
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      //*
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //*
+      // EXPORT SYMLIST=(*)
+      //*
+      // SET SSID=${ssid}
+      // SET PSSPLAN=$[pssplan]
+      // SET GUDPLAN=$[gudplan]
+      // SET GENDEBUG='${debugMode}'
+      // SET LOGMODE='${violationResponse}'
+      // SET RULSPACE='SPACE=(CYL,(10,10)),'
+      // SET VTIBSZ=20
+      //*-----------------------------------------------------------------
+      //*
+      //SQLXPLOR EXEC COBPRPSS
+      ${sqlExplorerInputStream}
+      //RULESOUT.SYSUT2 DD &GENDEBUG
+      //*-----------------------------------------------------------------
+      //*
+      //IFPSS    IF (SQLXPLOR.PSSMAIN.RC EQ 4) THEN
+      //COBLOGER EXEC COBPRLOG
+      //LOGGER.AS$INPUT DD DSN=&&RULESOUT,
+      //            DISP=(OLD,DELETE)
+      //IFPSSEND ENDIF
+      //*
+    maxJobWaitTime: 10
