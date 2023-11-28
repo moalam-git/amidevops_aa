@@ -1,0 +1,104 @@
+name: WORKFLOW_SM_SA      #specify workflow name
+
+on:
+  workflow_dispatch               #manual trigger of the workflow
+
+jobs:
+  Schema_Change:                  #name of the job
+    runs-on: dev-aa               #specify runner name
+    container:
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.5-SSL
+      options: -u 1008           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in Config_Schema_Migration_CompareDDL_Demo.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          # Use syntax \<var name\> to find and replace the exact matching word
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.ddl_file}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          echo "-----   Config_Schema_Migration_CompareDDL_Demo.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # # Execute house_keeping JCL (to drop db2 objects if already created)
+      # - name: House Keeping 
+      #   run:
+      #     step house_keeping Config_Schema_Migration_CompareDDL_Demo.yml      
+          
+      # # Execute application step - fileUpload (local_to_mainframe)
+      # - name: Transfer DDL to mainframe 
+      #   run:
+      #     step local_to_mainframe Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Execute application step - localCatToDDL (localCat_to_DDL)
+      - name: Schema Migration-Local Cat to DDL 
+        run:
+          step localCat_to_DDL Config_Schema_Migration_CompareDDL_Demo.yml
+  
+  SA_Static_SQL:              #name of the job
+    runs-on: dev-aa               #specify runner name
+    container: 
+      image: pun-harborpd-01.bmc.com/bmc_qa/amisqlperf/sqlassuranceuc:13.01.00.0001.1-SSL
+      options: -u 1008
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
+      # from repository into path specified with -d parameter (ex. /opt/secret)  
+      # - name: unzip client certificate
+      #   run: |
+      #    unzip -P "${{secrets.zip_cert_pass}}" <clientCertificateName>.p12 -d /opt/secret
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in Config_SQL_Assurance.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_SQL_Assurance.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_SQL_Assurance.yml
+          # For certBased Authentication, uncomment the following 2 sed commands
+          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" Config_SQL_Assurance.yml
+          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" Config_SQL_Assurance.yml
+          # Use syntax \<var name\> to find and replace the exact matching word
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" Config_SQL_Assurance.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_SQL_Assurance.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_SQL_Assurance.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_SQL_Assurance.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_SQL_Assurance.yml         
+          echo "-----   Config_SQL_Assurance.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication Config_SQL_Assurance.yml
+          
+      # Execute application step - analyzeStaticSql - plan
+      - name: Analyze Static SQL - Plan 
+        run:
+          step static_sql_plan Config_SQL_Assurance.yml
+
+      # Execute application step - analyzeStaticSql - package
+      - name: Analyze Static SQL - Package 
+        run:
+          step static_sql_package Config_SQL_Assurance.yml
