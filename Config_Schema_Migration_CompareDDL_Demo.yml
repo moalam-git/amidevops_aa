@@ -21,7 +21,7 @@ authentication:
   password: USER_PASS_AUTH
   certificatePath: CERT_PATH_AUTH
   certificatePassword: CERT_PASS_AUTH
-  symbolicPropertiesFilePath: symbol_DEJM_BUILD.properties
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEJM.properties
   debugModeAllSteps: false
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
   
