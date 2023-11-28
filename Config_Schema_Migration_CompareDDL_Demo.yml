@@ -57,7 +57,7 @@ localCatToDDL:
     worklistPds: $[wlpds](JOB_ID)
     impactReportPds: $[irpds](JOB_ID)
     executionJclPds: $[execpds](JOB_ID)
-    preExecutionBaselineType: userBased
+    preExecutionBaselineType: none
     preExecutionBaselineProfileName:
     preExecutionBaselineName:
     generateCdlRollbackSchemaChanges: false
