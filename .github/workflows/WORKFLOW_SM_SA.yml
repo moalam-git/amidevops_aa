@@ -89,9 +89,9 @@ jobs:
           echo "-----   Config_SQL_Assurance.yml file is updated -----"
       
       # Execute application step - authentication
-      - name: Authentication 
-        run:
-          step authentication Config_SQL_Assurance.yml
+      # - name: Authentication 
+      #   run:
+      #     step authentication Config_SQL_Assurance.yml
           
       # Execute application step - analyzeStaticSql - plan
       - name: Analyze Static SQL - Plan 
@@ -99,6 +99,6 @@ jobs:
           step static_sql_plan Config_SQL_Assurance.yml
 
       # Execute application step - analyzeStaticSql - package
-      - name: Analyze Static SQL - Package 
-        run:
-          step static_sql_package Config_SQL_Assurance.yml
+      # - name: Analyze Static SQL - Package 
+      #   run:
+      #     step static_sql_package Config_SQL_Assurance.yml
