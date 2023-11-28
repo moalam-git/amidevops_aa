@@ -48,9 +48,9 @@ jobs:
       #     step local_to_mainframe Config_Schema_Migration_CompareDDL_Demo.yml
           
       # Execute application step - localCatToDDL (localCat_to_DDL)
-      - name: Schema Migration-Local Cat to DDL 
-        run:
-          step localCat_to_DDL Config_Schema_Migration_CompareDDL_Demo.yml
+      # - name: Schema Migration-Local Cat to DDL 
+      #   run:
+      #     step localCat_to_DDL Config_Schema_Migration_CompareDDL_Demo.yml
   
   SA_Static_SQL:              #name of the job
     runs-on: dev-aa               #specify runner name
