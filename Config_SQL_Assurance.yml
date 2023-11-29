@@ -92,7 +92,7 @@ analyzeStaticSql:
     # collectionIdPackage: RDAJZL
     collectionIdPackage: LONGCOLFOR128BYTESENDINGWITH3XXX111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111XXX
     # versionPackage: ACS_1120_BPU7868
-    versionPackage: V1.02
+    versionPackage: "V1.02"
     useObjectListFile: false          #valid values are true or false (case insensitive)
     objectListContinueOnError: FALSe  #valid values are true or false (case insensitive)
     objectListFilePath: Object_List_File_PKG_100plus.txt
