@@ -87,9 +87,12 @@ analyzeStaticSql:
     explainMethod: dynamic           #valid values are static or dynamic (case insensitive)
     objectType: PACKAGE              #valid values are plan or package (case insensitive)
     # objectName: ACTD1F8B
-    objectName: ACSBQCO
-    collectionIdPackage: RDAJZL
-    versionPackage: ACS_1120_BPU7868
+    objectName: ORD1SELE
+    # objectName: ACSBQCO
+    # collectionIdPackage: RDAJZL
+    collectionIdPackage: LONGCOLFOR128BYTESENDINGWITH3XXX111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111XXX
+    # versionPackage: ACS_1120_BPU7868
+    versionPackage: V1.02
     useObjectListFile: false          #valid values are true or false (case insensitive)
     objectListContinueOnError: FALSe  #valid values are true or false (case insensitive)
     objectListFilePath: Object_List_File_PKG_100plus.txt
