@@ -85,7 +85,7 @@ analyzeStaticSql:
     ssid: DEjm
     violationResponse: FAIL          #valid values are warn or fail (case insensitive)
     explainMethod: dynamic           #valid values are static or dynamic (case insensitive)
-    objectType:               #valid values are plan or package (case insensitive)
+    objectType: PACKAGE              #valid values are plan or package (case insensitive)
     # objectName: ACTD1F8B
     objectName: |
       LONGCOLFOR128BYTESENDINGWITH3XXXABCDEFGHIJKLMNOPQRSTUVWXYZ1111111111111111111111111111111111111111111111111111111111111111111XXX
