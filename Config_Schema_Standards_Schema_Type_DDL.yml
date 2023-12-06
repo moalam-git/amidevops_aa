@@ -33,7 +33,7 @@ schemaStandards:
     ruleSetName: $BMC SAMPLE RULE SET
     violationResponse: FAIL
     schemaType: DDL
-    inputSchemaSource: $[ddlpds](AA020719)  #specify DDL PDS data set and member name
+    inputSchemaSource: $[ddlpds](AA110723)  #specify DDL PDS data set and member name
     useOutboundMigrateProfileAfterRead: false
     outboundMigrateProfileAfterRead:
     jobCard: |
