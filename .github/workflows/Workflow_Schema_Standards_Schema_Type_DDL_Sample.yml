@@ -49,7 +49,8 @@ jobs:
           sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_Schema_Standards_Schema_Type_DDL.yml
           sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_Schema_Standards_Schema_Type_DDL.yml
           sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_Schema_Standards_Schema_Type_DDL.yml
-          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Standards_Schema_Type_DDL.yml         
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Standards_Schema_Type_DDL.yml
+          cat Config_Schema_Standards_Schema_Type_DDL.yml
           echo "-----   Config_Schema_Standards_Schema_Type_DDL.yml file is updated -----"
       
       # Execute application step - authentication
