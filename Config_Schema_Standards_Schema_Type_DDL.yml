@@ -31,7 +31,7 @@ schemaStandards:
     generateJclOnly: false
     ssid: DEJM             #specify Db2 subsystem ID
     ruleSetName: $BMC SAMPLE RULE SET
-    violationResponse: FALSE
+    violationResponse: false
     schemaType: DDL
     inputSchemaSource: $[ddlpds](AA110723)  #specify DDL PDS data set and member name
     useOutboundMigrateProfileAfterRead: false
