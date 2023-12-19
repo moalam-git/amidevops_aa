@@ -7,7 +7,7 @@ jobs:
   SA_Static_SQL:              #name of the job
     runs-on: dev-aa               #specify runner name
     container: 
-      image: pun-harborpd-01.bmc.com/bmc_qa/amisqlperf/sqlassuranceuc:13.01.00.0001.4-SSL
+      image: pun-harborpd-01.bmc.com/bmc_dv/amisqlperf/sqlassuranceuc:13.01.00.0001.5-SNAPSHOT
       options: -u 1008
       
     steps:
@@ -46,9 +46,9 @@ jobs:
           step authentication Config_SQL_Assurance.yml
           
       # Execute application step - analyzeStaticSql - plan
-      # - name: Analyze Static SQL - Plan 
-      #   run:
-      #     step static_sql_plan Config_SQL_Assurance.yml
+      - name: Analyze Static SQL - Plan 
+        run:
+          step static_sql_plan Config_SQL_Assurance.yml
 
       # Execute application step - analyzeStaticSql - package
       - name: Analyze Static SQL - Package 
