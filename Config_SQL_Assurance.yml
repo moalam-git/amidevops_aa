@@ -1,7 +1,7 @@
 version: 2.0.0
 
 authentication:
-  debugMode: none
+  debugMode: true
   hostName: mvsdb2b.bmc.com
   port: 32208
   authenticationType: userbased             #valid values are userBased or certBased (case insensitive)
@@ -10,7 +10,7 @@ authentication:
   certificatePath: CERT_PATH_AUTH
   certificatePassword: CERT_PASS_AUTH
   symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEJM.properties
-  debugModeAllSteps: db
+  debugModeAllSteps: false
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
   
 analyzeStaticSql:
@@ -18,14 +18,14 @@ analyzeStaticSql:
     debugMode: True                           #valid values are true or false (case insensitive)
     generateJclOnly: FALSE                    #valid values are true or false (case insensitive)
     ssid: dejm
-    violationResponse: FALSE                   #valid values are warn or fail (case insensitive)
-    explainMethod: PLAN                     #valid values are static or dynamic (case insensitive)
-    objectType: static                          #valid values are plan or package (case insensitive)
+    violationResponse: warn                   #valid values are warn or fail (case insensitive)
+    explainMethod: STATIC                     #valid values are static or dynamic (case insensitive)
+    objectType: Plan                          #valid values are plan or package (case insensitive)
     # objectName: ACTD1F8B
     objectName: JZLPL01
     # objectName: $[objname]
-    useObjectListFile: DB                  #valid values are true or false (case insensitive)
-    objectListContinueOnError: false          #valid values are true or false (case insensitive) 
+    useObjectListFile: FALSE                  #valid values are true or false (case insensitive)
+    objectListContinueOnError: False          #valid values are true or false (case insensitive) 
     objectListFilePath: Object_List_File_Plan_100plus.txt
     jobCard: |
       //COBSSQL JOB ($[acctno]),'STATIC_SQL_PLAN',
@@ -84,8 +84,8 @@ analyzeStaticSql:
     generateJclOnly: False           #valid values are true or false (case insensitive)
     ssid: DEjm
     violationResponse: false          #valid values are warn or fail (case insensitive)
-    explainMethod: PACKAGE           #valid values are static or dynamic (case insensitive)
-    objectType: dynamic              #valid values are plan or package (case insensitive)
+    explainMethod: Dynamic           #valid values are static or dynamic (case insensitive)
+    objectType: Package              #valid values are plan or package (case insensitive)
     # objectName: ACTD1F8B
     objectName: |
       LONGCOLFOR128BYTESENDINGWITH3XXXABCDEFGHIJKLMNOPQRSTUVWXYZ1111111111111111111111111111111111111111111111111111111111111111111XXX
