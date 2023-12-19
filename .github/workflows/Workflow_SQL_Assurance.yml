@@ -7,7 +7,7 @@ jobs:
   SA_Static_SQL:              #name of the job
     runs-on: dev-aa               #specify runner name
     container: 
-      image: pun-harborpd-01.bmc.com/bmc_dv/amisqlperf/sqlassuranceuc:13.01.00.0001.4-SNAPSHOT
+      image: pun-harborpd-01.bmc.com/bmc_qa/amisqlperf/sqlassuranceuc:13.01.00.0001.5-SSL
       options: -u 1008
       
     steps:
