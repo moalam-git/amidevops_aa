@@ -83,7 +83,7 @@ analyzeStaticSql:
     debugMode: TRUE                  #valid values are true or false (case insensitive)
     generateJclOnly: False           #valid values are true or false (case insensitive)
     ssid: DEjm
-    violationResponse: false          #valid values are warn or fail (case insensitive)
+    violationResponse: Fail          #valid values are warn or fail (case insensitive)
     explainMethod: Dynamic           #valid values are static or dynamic (case insensitive)
     objectType: Package              #valid values are plan or package (case insensitive)
     # objectName: ACTD1F8B
