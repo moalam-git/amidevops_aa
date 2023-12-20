@@ -32,9 +32,9 @@ schemaStandards:
     ssid: DEJM             #specify Db2 subsystem ID
     ruleSetName: $BMC SAMPLE RULE SET
     violationResponse: false
-    schemaType: catalogMigrateProfileScope
-    # inputSchemaSource: $[ddlpds](AA110723)  #specify DDL PDS data set and member name
-    inputSchemaSource: MVSAMA.TEST.TEST
+    schemaType: DDL
+    inputSchemaSource: $[ddlpds](AA110723)  #specify DDL PDS data set and member name
+    # inputSchemaSource: MVSAMA.TEST.TEST
     useOutboundMigrateProfileAfterRead: false
     outboundMigrateProfileAfterRead:
     jobCard: |
@@ -42,10 +42,11 @@ schemaStandards:
       //  CLASS=A,MSGLEVEL=(1,1)
       //*
     schemaStandardsInputStream: |
+      //SCHEMAS.AMAIN  DD DISP=SHR,
+      //           DSN=${inputSchemaSource}
       //SCHEMAS.ALUIN  DD *,SYMBOLS=JCLONLY
         SSID &SSID
-        SOURCETYPE CATALOG
-        MIGPROFILE ${inputSchemaSource}
+        SOURCETYPE DDL
         RULESET (&RULESET)
         LOGMODE &LOGMODE
         VTIBUCKETSIZE &VTIBSZ
