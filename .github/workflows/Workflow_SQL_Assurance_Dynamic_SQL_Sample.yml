@@ -18,10 +18,10 @@ on:
 
 jobs:
   SA_Dynamic_SQL:                  #name of the job
-    runs-on: <name of the runner> #specify runner name
+    runs-on: dev-aa #specify runner name
     container: 
-      image: <Image location>/sqlassuranceuc:13.01.00.0001-GA
-      options: -u <uid>           #specify uid of the user running the runner
+      image: pun-harborpd-01.bmc.com/bmc_qa/amisqlperf/sqlassuranceuc:13.01.00.0001.5-SSL
+      options: -u 1008           #specify uid of the user running the runner
       
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -75,4 +75,4 @@ jobs:
       - name: Run Dummy step
         if: ${{ success() && env.retCode <= '0004' }}
         run:
-          step <dummy step name> GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          step jclExecutionUsingFreeForm GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
