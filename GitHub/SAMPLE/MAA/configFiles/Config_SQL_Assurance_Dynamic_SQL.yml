@@ -1,0 +1,105 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Config_SQL_Assurance_Dynamic_SQL.yml
+###------------------------------------------------------------------------------------------------------------------------------------
+# This config yaml file is a ready-made sample of the Authentication and Dynamic SQL steps for your reference and convenience. You can copy and customize the configuration.
+# Each line represents a property (key-value pair). 
+#   The property key (left side of colon) is a fixed keyword and should not be altered. 
+#   The property value (right side of colon) is for user input.    
+#   The alignment or spacing for the property key and value should not be changed. It may result in an unexpected error. The YAML file only works with proper alignment.
+#   For property values with multiple lines, specify the pipe | character after the property key.  On the following line, indent the lines with values.
+# Refer to the sample config file, 'Config_SQL_Assurance_ALL_Steps.yml', for the property key help text.
+###------------------------------------------------------------------------------------------------------------------------------------
+
+version: 2.0.0
+
+authentication:
+  debugMode: false
+  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  port: 32208
+  authenticationType: userBased
+  user: USER_ID_AUTH
+  password: USER_PASS_AUTH
+  certificatePath: CERT_PATH_AUTH
+  certificatePassword: CERT_PASS_AUTH
+  symbolicPropertiesFilePath: AMI_DevOps.properties
+  debugModeAllSteps: false
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
+  
+analyzeDynamicSql:
+  - stepName: dynamic_sql
+    debugMode: false
+    generateJclOnly: false
+    ssid: <Db2 subsystem ID>               #specify Db2 subsystem ID
+    violationResponse: fail
+    dsnStatementCacheTableCreator:
+    clearDsnStatementCacheTable: false
+    extractSqlFromDynamicStatementCache: true
+    failStepIfWhereClauseReturnsNoResultSet: true
+    whereClauseStatement: | 
+      PRIMAUTH = USER 
+      AND 
+      CACHED_TS >= CURRENT TIMESTAMP - 1 DAYS
+    jobCard: |
+      //COBDSQL JOB ($[acctno]),'DYNAMIC-SQL',
+      // CLASS=A,MSGLEVEL=(1,1)
+      //*
+    extractorInputStream: |
+      //EXTRACT.PARMIN   DD *,SYMBOLS=JCLONLY 
+      SSID=&SSID, 
+      PLAN=&GUDPLAN, 
+      DSNTRUNC=&DSNTRUNC, 
+      DSNEXPL=&DSNEXPL, 
+      DSNQUAL=&DSNQUAL 
+      //EXTRACT.SE$OPTS  DD * 
+      ${whereClauseStatement} 
+      //EXTRACT.PSS$OPTS DD * 
+      RULES="$[rules]" 
+      RULEDSN="$[ruledsn]" 
+      CURRENCY="$[currency]" 
+      MSGLEVEL=ALL
+    jcl: |
+      ${jobCard} 
+      //* 
+      //        JCLLIB ORDER=($[proclib]) 
+      //* 
+      //JOBLIB  DD  DSN=$[joblib1],DISP=SHR 
+      //        DD  DSN=$[joblib2],DISP=SHR 
+      //        DD  DSN=$[dsnexit],DISP=SHR 
+      //        DD  DSN=$[dsnload],DISP=SHR 
+      //* 
+      // SET RTEHLQ=$[rtehlq] 
+      // SET USRHLQ=$[usrhlq] 
+      //* 
+      // EXPORT SYMLIST=(*) 
+      //* 
+      // SET SSID=${ssid} 
+      // SET PSSPLAN=$[pssplan] 
+      // SET GUDPLAN=$[gudplan] 
+      // SET DSNQUAL=${dsnStatementCacheTableCreator} 
+      // SET DSNTRUNC=${clearDsnStatementCacheTable} 
+      // SET DSNEXPL=${extractSqlFromDynamicStatementCache} 
+      // SET GENDEBUG='${debugMode}'                  
+      // SET LOGMODE='${violationResponse}' 
+      // SET RULSPACE='SPACE=(CYL,(50,10)),' 
+      // SET VTIBSZ=20 
+      //*----------------------------------------------------------------- 
+      //* 
+      //XTRACT  EXEC COBPRXTR,PARMDD.EXTRACT=PARMIN
+      ${extractorInputStream} 
+      //XTROUT.SYSUT2 DD &GENDEBUG 
+      //* 
+      //*----------------------------------------------------------------- 
+      //* 
+      //IFXTR    IF (XTRACT.EXTRACT.RC LT 4) THEN
+      //SQLXPLOR EXEC COBPRPSS
+      //PSSMAIN.SYSIN DD DISP=(OLD,DELETE),DSN=&&XTROUT
+      //RULESOUT.SYSUT2 DD &GENDEBUG
+      //*-----------------------------------------------------------------
+      //*
+      //IFPSS    IF (SQLXPLOR.PSSMAIN.RC EQ 4) THEN
+      //COBLOGER EXEC COBPRLOG
+      //LOGGER.AS$INPUT DD DSN=&&RULESOUT,
+      //            DISP=(OLD,DELETE)
+      //IFPSSEND ENDIF
+      //IFXTREND ENDIF
+    maxJobWaitTime: 15
