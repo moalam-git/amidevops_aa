@@ -13,29 +13,29 @@
 version: 2.0.0
 
 authentication:
-  debugMode: false
-  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  debugMode: true
+  hostName: db2b.bmc.com          #specify the mainframe host name or IP address
   port: 32208
   authenticationType: userBased
   user: USER_ID_AUTH
   password: USER_PASS_AUTH
   certificatePath: CERT_PATH_AUTH
   certificatePassword: CERT_PASS_AUTH
-  symbolicPropertiesFilePath: AMI_DevOps.properties
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEJM.properties
   debugModeAllSteps: false
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
   
 analyzeStaticSql:
   - stepName: static_sql_package
-    debugMode: false
+    debugMode: true
     generateJclOnly: false
-    ssid: <Db2 subsystem ID>               #specify Db2 subsystem ID
-    violationResponse: fail
+    ssid: DEJM               #specify Db2 subsystem ID
+    violationResponse: warn
     explainMethod: dynamic
     objectType: package
-    objectName: <package name>             #specify name of the Package
-    collectionIdPackage: <collection ID>   #specify name of the Collection ID
-    versionPackage: <package version>      #specify name of the package version
+    objectName: ACSBQCO             #specify name of the Package
+    collectionIdPackage: RDAJZL   #specify name of the Collection ID
+    versionPackage: ACS_1120_BPU7868      #specify name of the package version
     useObjectListFile: false
     objectListContinueOnError: false
     objectListFilePath:
