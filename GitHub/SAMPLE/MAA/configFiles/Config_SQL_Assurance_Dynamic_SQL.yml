@@ -13,32 +13,32 @@
 version: 2.0.0
 
 authentication:
-  debugMode: false
-  hostName: <mainframe host name>          #specify the mainframe host name or IP address
+  debugMode: true
+  hostName: db2b.bmc.com          #specify the mainframe host name or IP address
   port: 32208
   authenticationType: userBased
   user: USER_ID_AUTH
   password: USER_PASS_AUTH
   certificatePath: CERT_PATH_AUTH
   certificatePassword: CERT_PASS_AUTH
-  symbolicPropertiesFilePath: AMI_DevOps.properties
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEJM.properties
   debugModeAllSteps: false
   executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
   
 analyzeDynamicSql:
   - stepName: dynamic_sql
-    debugMode: false
+    debugMode: true
     generateJclOnly: false
-    ssid: <Db2 subsystem ID>               #specify Db2 subsystem ID
+    ssid: DEJM               #specify Db2 subsystem ID
     violationResponse: fail
-    dsnStatementCacheTableCreator:
+    dsnStatementCacheTableCreator: MVSSSN4
     clearDsnStatementCacheTable: false
     extractSqlFromDynamicStatementCache: true
     failStepIfWhereClauseReturnsNoResultSet: true
     whereClauseStatement: | 
       PRIMAUTH = USER 
       AND 
-      CACHED_TS >= CURRENT TIMESTAMP - 1 DAYS
+      CACHED_TS >= CURRENT TIMESTAMP - 1 HOURS
     jobCard: |
       //COBDSQL JOB ($[acctno]),'DYNAMIC-SQL',
       // CLASS=A,MSGLEVEL=(1,1)
