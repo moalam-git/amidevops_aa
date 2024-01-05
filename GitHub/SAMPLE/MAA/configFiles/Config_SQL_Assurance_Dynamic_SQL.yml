@@ -103,3 +103,30 @@ analyzeDynamicSql:
       //IFPSSEND ENDIF
       //IFXTREND ENDIF
     maxJobWaitTime: 15
+
+jclExecutionUsingFreeForm:          #Step represents JCL Execution Using Freeform JCL. DO NOT alter the name.  
+  - stepName: jclExecutionFreeForm  #User defined step name, used in the pipeline, for executing this configuration input.
+    runStepAlways: false            #Valid values are: true or false(default). If set to true, will run the current step every time despite the result of the previous schema change migration (compare) step.  
+    debugMode: true                #Valid values are: true or false(default). If set to true, will produce additional debug messages in the Console output log. 
+    freeFormJcl: |                  #JCL statements used to execute JCL job. Value will be multiple lines.
+      //SAMPLEST JOB (5213),'SORT   ',
+      //         MSGCLASS=X,NOTIFY=&SYSUID,CLASS=A
+      //*
+      //*     SORT 1ST 5 CHARS IN ASCENDING ORDER
+      //*
+      //STEP01   EXEC PGM=SORT
+      //SYSOUT   DD SYSOUT=*
+      //SORTIN   DD *
+      LINE5
+      LINE2
+      LINE1
+      LINE4
+      LINE3
+      /*
+      //SORTOUT  DD SYSOUT=*
+      //SYSIN    DD *
+           SORT FIELDS=(1,5,CH,A)
+      /*
+      //
+    acceptableReturnCode: 0004      #Valid values are: 0000-9999 and default is 0004. Maximum return code value that communicates that the submitted job was successful. 
+    maxJobWaitTime: 2               #Valid values are: 1-60 and default is 2. Maximum length of time in minutes that the application waits for job completion from the mainframe.
