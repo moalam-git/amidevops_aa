@@ -75,4 +75,4 @@ jobs:
       - name: Run Dummy step
         if: ${{ success() && env.retCode <= '0004' }}
         run:
-          step jclExecutionUsingFreeForm GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          step jclExecutionFreeForm GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
