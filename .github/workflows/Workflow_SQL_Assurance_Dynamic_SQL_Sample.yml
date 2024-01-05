@@ -1,0 +1,78 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Workflow_SQL_Assurance_Dynamic_SQL_Sample.yml (for GitHub Actions)
+###------------------------------------------------------------------------------------------------------------------------------------
+# The sample workflow performs Authentication + Dynamic SQL steps using application defined command step.
+# The sample workflow script is defined to use various items like below:
+#  a) References to variables added through GitHub Actions secrets and variables.
+#  b) Use of Linux based sed command to replace input as variable name by variable definition from GitHub Actions secrets and variables.
+#  c) Use of configuration file (Config_SQL_Assurance_Dynamic_SQL.yml), that resides in directory (non-root folder).
+#     Example of properties of authentication step is taken from config file "Config_SQL_Assurance_Dynamic_SQL.yml", that is
+#       maintained inside folders "GitHub/SAMPLE/MAA/configFiles":
+#            step authentication GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+#  d) GitHub Actions based "if:" condition command is used.
+###------------------------------------------------------------------------------------------------------------------------------------
+name: Workflow_SQL_Assurance_Dynamic_SQL_Sample   #name of the workflow
+
+on:
+  workflow_dispatch               #manual trigger of the workflow
+
+jobs:
+  SA_Dynamic_SQL:                  #name of the job
+    runs-on: <name of the runner> #specify runner name
+    container: 
+      image: <Image location>/sqlassuranceuc:13.01.00.0001-GA
+      options: -u <uid>           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
+      # from repository into path specified with -d parameter (ex. /opt/secret)  
+      # - name: unzip client certificate
+      #   run: |
+      #    unzip -P "${{secrets.zip_cert_pass}}" <clientCertificateName>.p12 -d /opt/secret
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          # For certBased Authentication, uncomment the following 2 sed commands
+          # sed -i "s|CERT_PATH_AUTH|/opt/secret/<clientCertificateName>.p12|" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          # sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml         
+          echo "-----   GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+          
+      # Execute application step - analyzeDynamicSql (dynamic_sql)
+      - name: SQL Assurance - Analyze Dynamic SQL
+        run:
+          step dynamic_sql GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
+
+      # Fetch the return code from output file output_analyze_dynamic_sql.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code-Dynamic SQL
+        run: |
+          . $GITHUB_WORKSPACE/output_analyze_dynamic_sql.properties  #read and fetch the return code from output file
+          echo "retCode=$dynamicSqlRC" >> "$GITHUB_ENV"               #set the return code as environment variable
+
+      ###
+      # Execute dummy step - It could be any customized subsequent step based on the requirement
+      # Using GitHub Actions based if condition - Run step only if condition is satisfied.
+      ###
+      - name: Run Dummy step
+        if: ${{ success() && env.retCode <= '0004' }}
+        run:
+          step <dummy step name> GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
