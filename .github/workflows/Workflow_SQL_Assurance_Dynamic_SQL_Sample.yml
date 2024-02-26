@@ -74,6 +74,6 @@ jobs:
       # Using GitHub Actions based if condition - Run step only if condition is satisfied.
       ###
       - name: Run Dummy step
-        if: ${{ success() && env.retCode <= '0004' }}
+        if: ${{ (success() || failure()) && env.retCode <= '0004' }}
         run:
           step jclExecutionFreeForm GitHub/SAMPLE/MAA/configFiles/Config_SQL_Assurance_Dynamic_SQL.yml
