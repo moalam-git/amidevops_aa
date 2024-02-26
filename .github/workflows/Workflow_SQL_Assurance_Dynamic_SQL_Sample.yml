@@ -64,7 +64,7 @@ jobs:
       # Fetch the return code from output file output_analyze_dynamic_sql.properties
       # and set in output variable as environment variable to use in subsequent steps
       - name: Return Code-Dynamic SQL
-        if: success() || failure()
+        if: ${{ success() || failure() }}
         run: |
           . $GITHUB_WORKSPACE/output_analyze_dynamic_sql.properties  #read and fetch the return code from output file
           echo "retCode=$dynamicSqlRC" >> "$GITHUB_ENV"               #set the return code as environment variable
