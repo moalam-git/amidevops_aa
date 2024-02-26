@@ -30,7 +30,7 @@ analyzeDynamicSql:
     debugMode: true
     generateJclOnly: false
     ssid: DEJM               #specify Db2 subsystem ID
-    violationResponse: warn  #specify violation response fail or warn
+    violationResponse: fail  #specify violation response fail or warn
     dsnStatementCacheTableCreator: MVSSSN4
     clearDsnStatementCacheTable: false
     extractSqlFromDynamicStatementCache: true
