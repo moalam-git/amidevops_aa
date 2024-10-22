@@ -191,7 +191,7 @@ jclExecutionUsingPDSMember:
     acceptableReturnCode: 0008
     maxJobWaitTime: 2
 
-  - stepName: jclExecutionPDS
+  - stepName: implement_schema_change
     debugMode: true
     jclPds: $[execpds]
     jclMemberName: JOB_ID
