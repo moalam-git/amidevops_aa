@@ -1,0 +1,199 @@
+version: 3.0.0
+
+authentication:
+  debugMode: true
+  hostName: db2b.bmc.com
+  port: 32208
+  authenticationType: certBased
+  user: USER_ID_AUTH
+  password: USER_PASS_AUTH
+  certificatePath: CERT_PATH_AUTH
+  certificatePassword: CERT_PASS_AUTH
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEMO.properties
+  debugModeAllSteps: false
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
+  
+fileUpload:
+  - stepName: local_to_mainframe
+    debugMode: true
+    sourceDirectory: .
+    sourceFileName: DDL_FILE_FT_UPLOAD
+    destinationPds: $[ddlpds]
+    destinationMember: JOB_ID
+
+schemaStandards:
+  - stepName: analyze_ddl
+    debugMode: true
+    generateJclOnly: false
+    ssid: DEMO     
+    ruleSetName: $BMC SAMPLE RULE SET
+    violationResponse: WARN
+    schemaType: DDL
+    inputSchemaSource: $[ddlpds](JOB_ID)
+    useOutboundMigrateProfileAfterRead: false
+    outboundMigrateProfileAfterRead: 
+    jobCard: |
+      //AMASTDS JOB ($[acctno]),'SCHEMA STANDARDS',
+      //  CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+      //*
+      /*ROUTE XEQ BMCPLX1      
+      /*JOBPARM SYSAFF=DB2B    
+    schemaStandardsInputStream: |
+      //SCHEMAS.AMAIN  DD DISP=SHR,
+      //           DSN=${inputSchemaSource}
+      //SCHEMAS.ALUIN  DD *,SYMBOLS=JCLONLY
+        SSID &SSID
+        SOURCETYPE DDL
+        RULESET (&RULESET)
+        LOGMODE &LOGMODE
+        VTIBUCKETSIZE &VTIBSZ
+    debugInputStream: |
+      //**********************************************************************
+      //* The DDs below are used for debugging of Schema Standards
+      //**********************************************************************
+      //* $XMLOUT$ contains the objects that will be processed
+      //SCHEMAS.$XMLOUT$ DD SYSOUT=*
+      //* $RULETRE contains the rules that will run against the objects
+      //*SCHEMAS.$RULETRE DD SYSOUT=*
+      //* $VTIRULE contains the VTI rules that were tested
+      //*SCHEMAS.$VTIRULE DD SYSOUT=*
+      //**********************************************************************
+    jcl: |
+      ${jobCard}
+      //*
+      //       JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB  DD  DISP=SHR,
+      //            DSN=$[joblib1]
+      //        DD  DISP=SHR,
+      //            DSN=$[joblib2]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnexit]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnload]
+      //*
+      // EXPORT SYMLIST=(*)
+      //*
+      // SET SSID=${ssid}
+      // SET GUDPLAN=$[gudplan]
+      // SET RULESET='${ruleSetName}'
+      // SET LOGMODE=${violationResponse}
+      // SET VTIBSZ=20
+      //*******************************************************
+      //SCHSTDS  EXEC AMAPROCS
+      ${schemaStandardsInputStream}
+      ${debugInputStream}
+    maxJobWaitTime:  2
+
+localCatToDDL:
+  - stepName: localCat_to_DDL
+    debugMode: true
+    generateJclOnly: false
+    ssid: DEMO
+    workIdOwner: MVSAMA
+    workIdName: JOB_ID
+    addCommentToWorkId: false
+    workIdCommentText:
+    compare2DdlPds: $[ddlpds](JOB_ID)
+    useOutboundMigrateProfileBeforeComparison: false
+    outboundMigrateProfileBeforeComparison: 
+    addCommentToCompare: false
+    compareCommentText:
+    useOutboundMigrateProfileAfterComparison:  
+    outboundMigrateProfileAfterComparison: 
+    cdlPds: $[cdlpds](JOB_ID)
+    useInboundMigrateProfile: false
+    inboundMigrateProfile: 
+    worklistPds: $[wlpds](JOB_ID)
+    impactReportPds: $[irpds](JOB_ID)
+    executionJclPds: $[execpds](JOB_ID)
+    preExecutionBaselineType: none
+    preExecutionBaselineProfileName: 
+    preExecutionBaselineName: 
+    generateCdlRollbackSchemaChanges: false
+    cdlPdsRollback:
+    createPostExecutionBaseline: false
+    postExecutionBaselineProfileName: 
+    postExecutionBaselineName: 
+    jobCard: | 
+      //DEVOPS JOB ($[acctno]),'COMPARE',
+      // CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+      /*ROUTE XEQ BMCPLX1      
+      /*JOBPARM SYSAFF=DB2B    
+    additionalCompareInputKeywords: 
+    additionalImportInputKeywords:
+    additionalAnalysisInputKeywords:
+    additionalJclGenerationInputKeywords:
+    jcl: |
+      ${jobCard}
+      //*
+      // JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB DD DSN=$[joblib1],DISP=SHR
+      //       DD DSN=$[joblib2],DISP=SHR
+      //       DD DSN=$[dsnexit],DISP=SHR
+      //       DD DSN=$[dsnload],DISP=SHR
+      //***************************************************
+      // SET ACMDOPT=$[dopts]
+      // SET RTEHLQ=$[rtehlq]
+      // SET USRHLQ=$[usrhlq]
+      //***************************************************
+      // SET DDLFILE=${compare2DdlPds}
+      // SET CDLFILE=${cdlPds}
+      // SET WORKLIST=${worklistPds}
+      // SET EXECJCL=${executionJclPds}
+      // SET IMPRPT=${impactReportPds}
+      //*
+      // SET POFFILE=$[pofdsn]
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER COMPARE
+      //*----------------------------------------------------
+      ${Compare Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER IMPORT
+      //*----------------------------------------------------
+      //IMPORT EXEC AMAPROCI,
+      // COND=${BMC_COMPARE_COND_CODE}
+      //IMPORT.IMPORTIN DD DISP=SHR,
+      // DSN=&CDLFILE
+      ${Import Input Stream}
+      //*----------------------------------------------------
+      //* BMC CHANGE MANAGER ANALYSIS
+      //*----------------------------------------------------
+      //ANALYSIS EXEC AMAPROCA,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${Analysis Input Stream}
+      //*----------------------------------------------------
+      //* BMC JCL GENERATION
+      //*----------------------------------------------------
+      //JCLGEN EXEC AMAPROCJ,
+      // COND=${BMC_COMPARE_COND_CODE}
+      ${JCL Generation Input Stream}
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
+
+outputTransmission:
+  - stepName: download_output
+    debugMode: true
+    cdlSourcePds: $[cdlpds]
+    worklistSourcePds: $[wlpds]
+    execJclSourcePds: $[execpds]
+    impactReportSourcePds: $[irpds]
+    sourceMemberName: JOB_ID
+    destinationDirectory: .
+    destinationFileName: JOB_ID
+
+jclExecutionUsingPDSMember:
+  - stepName: house_keeping    
+    debugMode: true
+    jclPds: MVSAMA.JCL
+    jclMemberName: DBCLEAN
+    acceptableReturnCode: 0008
+    maxJobWaitTime: 2
+
+  - stepName: jclExecutionPDS
+    debugMode: true
+    jclPds: $[execpds]
+    jclMemberName: JOB_ID
+    acceptableReturnCode: 0004
+    maxJobWaitTime: 2
