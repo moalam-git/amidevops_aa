@@ -1,0 +1,108 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Workflow_Schema Migration_Sample.yml (for GitHub Actions)
+###------------------------------------------------------------------------------------------------------------------------------------
+# The sample workflow performs Authentication + File Transmission + Local Cat to DDL + Output Transmission + JCL Exec steps.
+# The sample workflow script is defined to use various items like below:
+#  a) References to variables added through GitHub Actions secrets and variables.
+#  b) Use of Linux based sed command to replace input as variable name by variable definition from GitHub Actions secrets and variables.
+#  c) Use of configuration file (Config_Schema_Migration_CompareDDL.yml), that resides in directory (non-root folder).
+#     Example of properties of authentication step is taken from config file "Config_Schema_Migration_CompareDDL.yml", that is
+#       maintained inside folders "GitHub/SAMPLE/MAA/configFiles":
+#            step authentication GitHub/SAMPLE/MAA/configFiles/Config_Schema_Migration_CompareDDL.yml
+#  d) GitHub Actions based "if:" condition command is used.
+###------------------------------------------------------------------------------------------------------------------------------------
+name: Workflow_Schema_Migration_Sample_Demo   #name of the workflow
+
+on:
+  workflow_dispatch               #manual trigger of the workflow
+
+jobs:
+  Schema_Change:                  #name of the job
+    runs-on: dev-aa               #specify runner name
+    container:
+      image: pun-harborpd-01.bmc.com/bmc_qa/amidevopsdb2/devopsuc:13.01.00.0003.5-SSL
+      options: -u 1008           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in Config_Schema_Migration_CompareDDL_Demo.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          # Use syntax \<var name\> to find and replace the exact matching word
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/DDL_FILE_FT_UPLOAD/${{vars.ddl_file}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" Config_Schema_Migration_CompareDDL_Demo.yml
+          echo "-----   Config_Schema_Migration_CompareDDL_Demo.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Execute house_keeping JCL (to drop db2 objects if already created)
+      - name: House Keeping 
+        run:
+          step house_keeping Config_Schema_Migration_CompareDDL_Demo.yml      
+          
+      # Execute application step - fileUpload (local_to_mainframe)
+      - name: Transfer DDL to mainframe 
+        run:
+          step local_to_mainframe Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Execute application step - localCatToDDL (localCat_to_DDL)
+      - name: Schema Migration-Local Cat to DDL 
+        run:
+          step localCat_to_DDL Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Fetch the return code from output file output_local_cat_ddl.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code-Local Cat to DDL 
+        run: |
+          . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
+          echo "RetCodeSchemaMig=$compareRC" >> "$GITHUB_ENV"            #set the return code as environment variable
+          
+      # Execute Review Impact Report JCL that analyze and review the impact report
+      - name: Review Impact Report 
+        run:
+          step impact_report_jcl Config_Schema_Migration_CompareDDL_Demo.yml    
+
+      # Fetch the return code of previously executed JCL from output file output_jcl_exec_pds.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      # if above JCL is run from PDS  - output file name is 'output_jcl_exec_pds.properties'
+      # if above JCL is run from file - output file name is 'output_jcl_exec_file.properties'
+      # if above JCL is run from freeform JCL - output file name is 'output_jcl_exec_freeform.properties'
+      - name: Return Code of Step- Review Impact Report 
+        run: |
+          . $GITHUB_WORKSPACE/output_jcl_exec_pds.properties   #read and fetch the return code from output file
+          echo "RetCodeJclExec=$jclExecRC" >> "$GITHUB_ENV"     #set the return code as environment variable
+
+      # Execute application step - outputTransmission (download_output)
+      - name: Download Files - CDL/WL/EXECJCL/IR 
+        run:
+          step download_output Config_Schema_Migration_CompareDDL_Demo.yml
+          
+      # Display the return codes before implementing the schema changes
+      - name: Display Return codes 
+        run: |
+          echo "Step Local Cat to DDL Return Code   : ${{env.RetCodeSchemaMig}}"
+          echo "Step Customized User JCL Return Code: ${{env.RetCodeJclExec}}"
+          
+      ###
+      # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
+      # Using GitHub Actions based if condition - Run step only if condition is satisfied.
+      ###
+      - name: Run JCL to Implement Schema Change
+        if: ${{ success() && env.RetCodeSchemaMig <= '0004' && env.RetCodeJclExec <= '0004' }}
+        run:
+          step implement_schema_change Config_Schema_Migration_CompareDDL_Demo.yml
