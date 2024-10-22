@@ -17,7 +17,7 @@ fileUpload:
   - stepName: local_to_mainframe
     debugMode: true
     sourceDirectory: .
-    sourceFileName: DDL_FILE_FT_UPLOAD
+    sourceFileName: DDL_FILE_DEMO
     destinationPds: $[ddlpds]
     destinationMember: JOB_ID
 
