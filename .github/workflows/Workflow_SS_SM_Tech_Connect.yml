@@ -93,6 +93,125 @@ jobs:
             !symbol_*.properties
             !AMI_DevOps*.properties
             
+      # Fetch the return code from output file output_schema_standards.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code - Schema Standards Analyze DDL 
+        run: |
+          . $GITHUB_WORKSPACE/output_schema_standards.properties         #read and fetch the return code from output file
+          echo "ssRetCode=$schemaStandardsRC" >> "$GITHUB_ENV"           #set the return code as environment variable
+
+      # Execute application step - localCatToDDL (localCat_to_DDL)
+      - name: Schema Migration-Local Cat to DDL 
+        if: ${{ success() && env.ssRetCode <= '0004' }}
+        run:
+          step localCat_to_DDL GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          
+      # Fetch the return code from output file output_local_cat_ddl.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code-Local Cat to DDL 
+        run: |
+          . $GITHUB_WORKSPACE/output_local_cat_ddl.properties  #read and fetch the return code from output file
+          echo "smRetCode=$compareRC" >> "$GITHUB_ENV"         #set the return code as environment variable
+          
+      # Execute application step - outputTransmission (download_output)
+      - name: Download Files - CDL/WL/EXECJCL/IR 
+        run:
+          step download_output GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          
+      # Display the return codes before implementing the schema changes
+      - name: Display Return codes 
+        run: |
+          echo "Step Local Cat to DDL Return Code   : ${{env.smRetCode}}"
+          echo "Schema Standards Return COde        : ${{env.ssRetCode}}"
+
+      # upload artifacts 
+      - name: Upload artifacts - SM
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-SM
+          path: |
+            *.properties
+            *.txt
+            Workflow_SM*
+            !DEMO.txt
+            !DOSAMPLE.txt
+            !SortJcl.txt
+            !symbol_*.properties
+            !AMI_DevOps*.properties
+            
+  implement_Job:                    #name of the job
+    needs: Compare_Job
+    runs-on: dev-aa               #specify runner name
+    container:
+      image: pun-harborpd-01.bmc.com/amidevopsdb2/devopsuc:13.01.00.0006-GA
+      options: -u 1008           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
+      # from repository into path specified with -d parameter (ex. /opt/secret)  
+      - name: unzip client certificate
+        run: |
+         unzip -P "${{secrets.zip_cert_pass}}" mvsama4.zip -d /opt/secret        
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          # sed -i "s/USER_ID_AUTH/${{vars.user_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          # sed -i "s/USER_PASS_AUTH/${{secrets.user_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          # For certBased Authentication, uncomment the following 2 sed commands
+          sed -i "s|CERT_PATH_AUTH|/opt/secret/mvsama4.p12|" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          # Use syntax \<var name\> to find and replace the exact matching word
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          sed -i "s/DDL_FILE_DEMO/${{vars.ddl_file_demo}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          echo "-----   GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+          
+      # Execute house_keeping JCL (to drop db2 objects if already created)
+      - name: House Keeping 
+        run:
+          step house_keeping GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml      
+          
+      # Execute application step - fileUpload (local_to_mainframe)
+      - name: Transfer DDL to mainframe 
+        run:
+          step local_to_mainframe GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+
+      # Execute application step - schemaStandards (analyze_ddl)
+      - name: Analyze DDL 
+        run:
+          step analyze_ddl GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+
+      # upload artifacts 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-SS
+          path: |
+            *.properties
+            *.txt
+            Workflow_SS*
+            !DEMO.txt
+            !DOSAMPLE.txt
+            !SortJcl.txt
+            !symbol_*.properties
+            !AMI_DevOps*.properties
+            
 
       # # Fetch the return code from output file output_schema_standards.properties
       # # and set in output variable as environment variable to use in subsequent steps
