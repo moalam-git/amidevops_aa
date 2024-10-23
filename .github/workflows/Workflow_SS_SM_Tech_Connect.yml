@@ -83,7 +83,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: report-SS
-          path: .
+          path: |
+            *.properties
+            *.txt
+            !DEMO.txt
+            !DOSAMPLE.txt
+            !symbol_*.properties
+            !AMI_DevOps*.properties
+            
 
       # # Fetch the return code from output file output_schema_standards.properties
       # # and set in output variable as environment variable to use in subsequent steps
