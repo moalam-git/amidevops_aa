@@ -89,7 +89,7 @@ jobs:
             Workflow_SS*
             !DEMO.txt
             !DOSAMPLE.txt
-            @SortJcl.txt
+            !SortJcl.txt
             !symbol_*.properties
             !AMI_DevOps*.properties
             
