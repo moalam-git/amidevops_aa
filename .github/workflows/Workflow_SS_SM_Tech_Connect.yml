@@ -86,8 +86,10 @@ jobs:
           path: |
             *.properties
             *.txt
+            Workflow_SS*
             !DEMO.txt
             !DOSAMPLE.txt
+            @SortJcl.txt
             !symbol_*.properties
             !AMI_DevOps*.properties
             
