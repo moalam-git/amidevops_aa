@@ -111,6 +111,7 @@ outputTransmission:
     destinationDirectory: .
     destinationFileName: JOB_ID
 
+jclExecutionUsingPDSMember:
   - stepName: implement_schema_change
     debugMode: true
     jclPds: $[execpds]
