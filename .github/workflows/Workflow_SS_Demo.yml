@@ -70,6 +70,7 @@ jobs:
 
       # upload artifacts 
       - name: Upload artifacts
+        if: ${{ success() || failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: report-SS
@@ -86,6 +87,7 @@ jobs:
       # Fetch the return code from output file output_schema_standards.properties
       # and set in output variable as environment variable to use in subsequent steps
       - name: Return Code - Schema Standards Analyze DDL 
+        if: ${{ success() || failure() }}
         run: |
           . $GITHUB_WORKSPACE/output_schema_standards.properties         #read and fetch the return code from output file
           echo "ssRetCode=$schemaStandardsRC" >> "$GITHUB_ENV"           #set the return code as environment variable
