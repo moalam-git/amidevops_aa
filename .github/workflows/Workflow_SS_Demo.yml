@@ -18,7 +18,7 @@ on:
   workflow_dispatch               #manual trigger of the workflow
 
 jobs:
-  Compare_Job:                    #name of the job
+  Analyze_DDL_Job:                #name of the job
     runs-on: dev-aa               #specify runner name
     container:
       image: pun-harborpd-01.bmc.com/amidevopsdb2/devopsuc:13.01.00.0006-GA
