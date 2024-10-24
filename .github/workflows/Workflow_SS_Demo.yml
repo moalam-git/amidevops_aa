@@ -1,0 +1,91 @@
+###------------------------------------------------------------------------------------------------------------------------------------
+### Workflow_SS_Demo.yml (for GitHub Actions)
+###------------------------------------------------------------------------------------------------------------------------------------
+# The sample workflow performs Authentication + File Transmission + Schema standards.
+# The main purpose of the workflow is to analyze the DDL file using schema standards.
+# The sample workflow script is defined to use various items like below:
+#  a) References to variables added through GitHub Actions secrets and variables.
+#  b) Use of Linux based sed command to replace input as variable name by variable definition from GitHub Actions secrets and variables.
+#  c) Use of configuration file (Config_SS_Demo.yml), that resides in directory (non-root folder).
+#     Example of properties of authentication step is taken from config file "Config_SS_Demo.yml", that is
+#       maintained inside folders "GitHub/SAMPLE/MAA/configFiles":
+#            step authentication GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+#  d) GitHub Actions based "if:" condition command is used.
+###------------------------------------------------------------------------------------------------------------------------------------
+name: Workflow_SS_Tech_Connect_Demo   #name of the workflow
+
+on:
+  workflow_dispatch               #manual trigger of the workflow
+
+jobs:
+  Compare_Job:                    #name of the job
+    runs-on: dev-aa               #specify runner name
+    container:
+      image: pun-harborpd-01.bmc.com/amidevopsdb2/devopsuc:13.01.00.0006-GA
+      options: -u 1008           #specify uid of the user running the runner
+      
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # For certBased Authentication, uncomment the following task to unzip the specified client certificate
+      # from repository into path specified with -d parameter (ex. /opt/secret)  
+      - name: unzip client certificate
+        run: |
+         unzip -P "${{secrets.zip_cert_pass}}" mvsama4.zip -d /opt/secret        
+      
+      # Perform various initialization functions using Linux based command sed
+      - name: Initialization
+        run: |
+          echo "Replace variables defined in GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml file"
+          # Linux command sed is used to replace the config file variables with GitHub Actions secrets and variables
+          # For certBased Authentication, uncomment the following 2 sed commands
+          sed -i "s|CERT_PATH_AUTH|/opt/secret/mvsama4.p12|" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          sed -i "s/CERT_PASS_AUTH/${{secrets.cert_pass}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          # Use syntax \<var name\> to find and replace the exact matching word
+          sed -i "s/\<JOB_ID\>/${{vars.job_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          sed -i "s/DDL_FILE_DEMO/${{vars.ddl_file_demo}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          # Use GitHub Actions environment variables to fetch workflow name, run number, run by and run mode of the executing workflow
+          sed -i "s/PIPELINENAME_VALUE/${{github.workflow}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          sed -i "s/RUNNUMBER_VALUE/${{github.run_id}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          sed -i "s/RUNBY_VALUE/${{github.actor}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          echo "-----   GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml file is updated -----"
+      
+      # Execute application step - authentication
+      - name: Authentication 
+        run:
+          step authentication GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+          
+      # Execute application step - fileUpload (local_to_mainframe)
+      - name: Transfer DDL to mainframe 
+        run:
+          step local_to_mainframe GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+
+      # Execute application step - schemaStandards (analyze_ddl)
+      - name: Analyze DDL 
+        run:
+          step analyze_ddl GitHub/SAMPLE/MAA/configFiles/Config_SS_Demo.yml
+
+      # upload artifacts 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-SS
+          path: |
+            *.properties
+            *.txt
+            Workflow_SS*
+            !DEMO.txt
+            !DOSAMPLE.txt
+            !SortJcl.txt
+            !symbol_*.properties
+            !AMI_DevOps*.properties
+            
+      # Fetch the return code from output file output_schema_standards.properties
+      # and set in output variable as environment variable to use in subsequent steps
+      - name: Return Code - Schema Standards Analyze DDL 
+        run: |
+          . $GITHUB_WORKSPACE/output_schema_standards.properties         #read and fetch the return code from output file
+          echo "ssRetCode=$schemaStandardsRC" >> "$GITHUB_ENV"           #set the return code as environment variable
