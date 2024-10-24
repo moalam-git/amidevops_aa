@@ -142,6 +142,8 @@ jobs:
   implement_Job:                    #name of the job
     needs: Compare_Job
     runs-on: dev-aa               #specify runner name
+    environment:
+      name: Demo-Test
     container:
       image: pun-harborpd-01.bmc.com/amidevopsdb2/devopsuc:13.01.00.0006-GA
       options: -u 1008           #specify uid of the user running the runner
