@@ -1,0 +1,86 @@
+version: 3.0.0
+
+authentication:
+  debugMode: true
+  hostName: db2b.bmc.com
+  port: 32208
+  authenticationType: certBased
+  user: USER_ID_AUTH
+  password: USER_PASS_AUTH
+  certificatePath: CERT_PATH_AUTH
+  certificatePassword: CERT_PASS_AUTH
+  symbolicPropertiesFilePath: AMI_DevOps_SMPE1310_DEMO.properties
+  debugModeAllSteps: false
+  executionIdentifier: PipelineName=PIPELINENAME_VALUE,RunNumber=RUNNUMBER_VALUE,RunBy=RUNBY_VALUE,RunMode=RUNMODE_VALUE
+  
+fileUpload:
+  - stepName: local_to_mainframe
+    debugMode: true
+    sourceDirectory: .
+    sourceFileName: DDL_FILE_DEMO
+    destinationPds: $[ddlpds]
+    destinationMember: JOB_ID
+
+schemaStandards:
+  - stepName: analyze_ddl
+    debugMode: true
+    generateJclOnly: false
+    ssid: DEMO     
+    ruleSetName: $BMC SAMPLE RULE SET
+    violationResponse: WARN
+    schemaType: DDL
+    inputSchemaSource: $[ddlpds](JOB_ID)
+    useOutboundMigrateProfileAfterRead: false
+    outboundMigrateProfileAfterRead: 
+    jobCard: |
+      //AMASTDS JOB ($[acctno]),'SCHEMA STANDARDS',
+      //  CLASS=Q,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+      //*
+      /*ROUTE XEQ BMCPLX1      
+      /*JOBPARM SYSAFF=DB2B    
+    schemaStandardsInputStream: |
+      //SCHEMAS.AMAIN  DD DISP=SHR,
+      //           DSN=${inputSchemaSource}
+      //SCHEMAS.ALUIN  DD *,SYMBOLS=JCLONLY
+        SSID &SSID
+        SOURCETYPE DDL
+        RULESET (&RULESET)
+        LOGMODE &LOGMODE
+        VTIBUCKETSIZE &VTIBSZ
+    debugInputStream: |
+      //**********************************************************************
+      //* The DDs below are used for debugging of Schema Standards
+      //**********************************************************************
+      //* $XMLOUT$ contains the objects that will be processed
+      //SCHEMAS.$XMLOUT$ DD SYSOUT=*
+      //* $RULETRE contains the rules that will run against the objects
+      //*SCHEMAS.$RULETRE DD SYSOUT=*
+      //* $VTIRULE contains the VTI rules that were tested
+      //*SCHEMAS.$VTIRULE DD SYSOUT=*
+      //**********************************************************************
+    jcl: |
+      ${jobCard}
+      //*
+      //       JCLLIB ORDER=($[proclib])
+      //*
+      //JOBLIB  DD  DISP=SHR,
+      //            DSN=$[joblib1]
+      //        DD  DISP=SHR,
+      //            DSN=$[joblib2]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnexit]
+      //        DD  DISP=SHR,
+      //            DSN=$[dsnload]
+      //*
+      // EXPORT SYMLIST=(*)
+      //*
+      // SET SSID=${ssid}
+      // SET GUDPLAN=$[gudplan]
+      // SET RULESET='${ruleSetName}'
+      // SET LOGMODE=${violationResponse}
+      // SET VTIBSZ=20
+      //*******************************************************
+      //SCHSTDS  EXEC AMAPROCS
+      ${schemaStandardsInputStream}
+      ${debugInputStream}
+    maxJobWaitTime:  2
