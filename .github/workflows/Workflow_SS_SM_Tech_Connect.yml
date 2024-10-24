@@ -177,40 +177,40 @@ jobs:
           sed -i "s/RUNMODE_VALUE/${{github.event_name}}/" GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
           echo "-----   GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml file is updated -----"
       
-      # Execute application step - authentication
-      - name: Authentication 
-        run:
-          step authentication GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+      # # Execute application step - authentication
+      # - name: Authentication 
+      #   run:
+      #     step authentication GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
           
-      # Execute house_keeping JCL (to drop db2 objects if already created)
-      - name: House Keeping 
-        run:
-          step house_keeping GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml      
+      # # Execute house_keeping JCL (to drop db2 objects if already created)
+      # - name: House Keeping 
+      #   run:
+      #     step house_keeping GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml      
           
-      # Execute application step - fileUpload (local_to_mainframe)
-      - name: Transfer DDL to mainframe 
-        run:
-          step local_to_mainframe GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+      # # Execute application step - fileUpload (local_to_mainframe)
+      # - name: Transfer DDL to mainframe 
+      #   run:
+      #     step local_to_mainframe GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
 
-      # Execute application step - schemaStandards (analyze_ddl)
-      - name: Analyze DDL 
-        run:
-          step analyze_ddl GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+      # # Execute application step - schemaStandards (analyze_ddl)
+      # - name: Analyze DDL 
+      #   run:
+      #     step analyze_ddl GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
 
-      # upload artifacts 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-SS
-          path: |
-            *.properties
-            *.txt
-            Workflow_SS*
-            !DEMO.txt
-            !DOSAMPLE.txt
-            !SortJcl.txt
-            !symbol_*.properties
-            !AMI_DevOps*.properties
+      # # upload artifacts 
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: report-SS
+      #     path: |
+      #       *.properties
+      #       *.txt
+      #       Workflow_SS*
+      #       !DEMO.txt
+      #       !DOSAMPLE.txt
+      #       !SortJcl.txt
+      #       !symbol_*.properties
+      #       !AMI_DevOps*.properties
             
 
       # # Fetch the return code from output file output_schema_standards.properties
@@ -243,11 +243,11 @@ jobs:
       #     echo "Step Local Cat to DDL Return Code   : ${{env.smRetCode}}"
       #     echo "Schema Standards Return COde        : ${{env.ssRetCode}}"
           
-      # ###
-      # # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
-      # # Using GitHub Actions based if condition - Run step only if condition is satisfied.
-      # ###
-      # - name: Run JCL to Implement Schema Change
-      #   if: ${{ success() && env.smRetCode <= '0004' && env.ssRetCode <= '0004' }}
-      #   run:
-      #     step implement_schema_change GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
+      ###
+      # Execute application step - jclExecutionUsingPDSMember (jclExecutionPDS)  
+      # Using GitHub Actions based if condition - Run step only if condition is satisfied.
+      ###
+      - name: Run JCL to Implement Schema Change
+        # if: ${{ success() && env.smRetCode <= '0004' && env.ssRetCode <= '0004' }}
+        run:
+          step implement_schema_change GitHub/SAMPLE/MAA/configFiles/Config_SS_SM_Demo.yml
