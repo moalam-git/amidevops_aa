@@ -27,7 +27,7 @@ schemaStandards:
     generateJclOnly: false
     ssid: DEMO     
     ruleSetName: $BMC SAMPLE RULE SET
-    violationResponse: FAIL
+    violationResponse: WARN
     schemaType: DDL
     inputSchemaSource: $[ddlpds](JOB_ID)             #Example-TEST.DEMO.DDL(AA1024GH)
     useOutboundMigrateProfileAfterRead: false
