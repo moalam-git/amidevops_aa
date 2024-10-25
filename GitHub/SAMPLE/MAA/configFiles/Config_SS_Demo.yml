@@ -17,9 +17,9 @@ fileUpload:
   - stepName: local_to_mainframe
     debugMode: true
     sourceDirectory: .
-    sourceFileName: DDL_FILE_DEMO
+    sourceFileName: DDL_FILE_DEMO                   #DDL_FILE_DEMO is a variable whose value is DEMO.txt which contains DDL
     destinationPds: $[ddlpds]
-    destinationMember: JOB_ID
+    destinationMember: JOB_ID                       #JOB_ID is a variable whose value is substituted at run time.
 
 schemaStandards:
   - stepName: analyze_ddl
@@ -29,7 +29,7 @@ schemaStandards:
     ruleSetName: $BMC SAMPLE RULE SET
     violationResponse: FAIL
     schemaType: DDL
-    inputSchemaSource: $[ddlpds](JOB_ID)
+    inputSchemaSource: $[ddlpds](JOB_ID)             #Example-MVSAMA.DEVOPS.DDL(AA1024GH)
     useOutboundMigrateProfileAfterRead: false
     outboundMigrateProfileAfterRead: 
     jobCard: |
